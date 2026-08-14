@@ -1,4 +1,4 @@
-Entry for https://js13kgames.com/2026/ 🦄🌈 Unicorns and Rainbows
+Entry for https://js13kgames.com/2026/  Unicorns and Rainbows 🦄🌈
 
 # 🌈 Rainbow Runner
 
