@@ -2,7 +2,9 @@ Entry for https://js13kgames.com/2026/ 🦄🌈 Unicorns and Rainbows
 
 # 🌈 Rainbow Runner
 
-Quick-reaction 3-lane action! Dodge hazards, snatch stars, and trigger powerful boosts—all with simple **Left** and **Right** controls.
+Quick-reaction 3-lane action!
+
+Dodge hazards, snatch stars, and trigger powerful boosts—all with simple **Left** and **Right** controls.
 
 ![gameplay](design/Gemini_Generated_Image_z1r7afz1r7afz1r7.png)
 
