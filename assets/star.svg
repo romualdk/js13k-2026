@@ -8,6 +8,8 @@
       <stop offset=".9" stop-color="#f09e4a"/>
     </linearGradient>
   </defs>
-  <use href="#s" fill="gold" stroke="#ffb700" stroke-width="1.5"/>
-  <use href="#s" transform="matrix(.9 0 0 .9 5 5)" fill="url(#g)"/>
+  <g>
+    <use href="#s" fill="gold" stroke="#ffb700" stroke-width="1.5"/>
+    <use href="#s" transform="matrix(.9 0 0 .9 5 5)" fill="url(#g)"/>
+  </g>
 </svg>
