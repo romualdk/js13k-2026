@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Assets</title>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
   <style>
 body {
   margin: 0;
@@ -15,11 +16,44 @@ body {
           drop-shadow(-2px 0 0 #5f2d79) 
           drop-shadow(0 2px 0 #5f2d79) 
           drop-shadow(0 -2px 0 #5f2d79);}
+
 .rainbow { opacity: 0.8; }
-.cloud {  filter: brightness(0.8) (1px); }
+
+.cloud {filter: grayscale() brightness(8) opacity(0.9); }
+.cloud-gray {filter: grayscale() brightness(5) opacity(0.9); }
+
+.cloud-shield {  filter: grayscale() brightness(6) drop-shadow(2px 0 0 #99b7c3) 
+    drop-shadow(-2px 0 0 #99b7c3) 
+    drop-shadow(0 2px 0 #99b7c3) 
+    drop-shadow(0 -2px 0 #99b7c3)
+    ;
+  }
+
+  .cloud-storm { filter:
+    drop-shadow(2px 0 0 #052b45) 
+    drop-shadow(-2px 0 0 #052b45) 
+    drop-shadow(0 2px 0 #052b45) 
+    drop-shadow(0 -2px 0 #052b45)
+  ;
+  }
+
 .star { filter: drop-shadow(0 0 8px rgba(255, 220, 30, 0.9)); }
 .sparkle { filter: blur(0.5px); }
 .shadow { filter: brightness(0) opacity(0.5) blur(1px); }
+
+.bolt { filter: brightness(1.2) drop-shadow(0 0 12px rgba(255, 220, 30, 0.9)); }
+
+.magnet {
+  filter: drop-shadow(1px 0 0 #fff) 
+          drop-shadow(-1px 0 0 #fff) 
+          drop-shadow(0 1px 0 #fff) 
+          drop-shadow(0 -1px 0 #fff);
+}
+
+.gate-red { filter: brightness(1.5) drop-shadow(0 0 8px rgba(237, 103, 101, 0.8)); }
+.gate-blue { filter: hue-rotate(210deg) brightness(1.4) drop-shadow(0 0 8px rgba(55, 146, 210, 0.8)); }
+.gate-yellow { filter: hue-rotate(45deg) brightness(1.75) drop-shadow(0 0 8px rgba(255, 220, 30, 0.8)); }
+
   </style>
 </head>
 <body>
@@ -35,14 +69,34 @@ body {
     <br />
     <img src="assets/cloud.svg" width="400" height="200" />
     <img src="assets/cloud.svg" width="400" height="200" class="cloud" />
+    <img src="assets/cloud.svg" width="400" height="200" class="cloud-gray" />
+    <br />
+    <img src="assets/cloud.svg" width="200" height="100" class="cloud-shield" />
+    <img src="assets/cloud.svg" width="200" height="100" class="cloud-storm" />
+    <img src="assets/cloud.svg" width="200" height="100" class="shadow" />
     <br />
     <img src="assets/star.svg" width="140" height="140" />
     <img src="assets/star.svg" width="140" height="140" class="star" />
     <img src="assets/star.svg" width="140" height="140" class="shadow" />
     <br />
+    <img src="assets/bolt.svg" width="140" height="120" />
+    <img src="assets/bolt.svg" width="140" height="120" class="bolt"/>
+    <img src="assets/bolt.svg" width="140" height="120" class="shadow"/>
+    <br />
+    <img src="assets/magnet.svg" width="140" height="140" />
+    <img src="assets/magnet.svg" width="140" height="140" class="magnet"/>
+    <img src="assets/magnet.svg" width="140" height="140" class="shadow"/>
+    <br />
+    <img src="assets/gate.svg" width="200" height="200" />
+    <img src="assets/gate.svg" width="200" height="200" class="gate-yellow" />
+    <img src="assets/gate.svg" width="200" height="200" class="gate-blue" />
+    <img src="assets/gate.svg" width="200" height="200" class="gate-red" />
+    <br />
     <img src="assets/sparkle.svg" width="100" height="100" />
     <img src="assets/sparkle.svg" width="100" height="100" class="sparkle" />
     <img src="assets/sparkle.svg" width="100" height="100" class="shadow" />
+    
+   
   </center>
 </body>
 </html>
