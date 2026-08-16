@@ -3,100 +3,204 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Assets</title>
+  <title>Assets & Game Mechanics</title>
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
   <style>
-body {
-  margin: 0;
-  min-height: 100vh;
-  background: repeating-conic-gradient(#808080 0% 25%, #e0e0e0 0% 50%) 0 0 / 40px 40px;
-}
+    body {
+      margin: 0;
+      padding: 30px 20px;
+      min-height: 100vh;
+      background: repeating-conic-gradient(#808080 0% 25%, #e0e0e0 0% 50%) 0 0 / 40px 40px;
+      font-family: system-ui, -apple-system, sans-serif;
+      text-align: center;
+      color: #222;
+    }
 
-.unicorn { filter: drop-shadow(2px 0 0 #5f2d79) 
-          drop-shadow(-2px 0 0 #5f2d79) 
-          drop-shadow(0 2px 0 #5f2d79) 
-          drop-shadow(0 -2px 0 #5f2d79);}
+    /* Section container for clean readability over checkerboard */
+    .section {
+      max-width: 900px;
+      margin: 0 auto 30px auto;
+      background: rgba(255, 255, 255, 0.88);
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
 
-.rainbow { opacity: 0.8; }
+    .section h2 {
+      margin: 0 0 6px 0;
+      font-size: 1.4rem;
+    }
 
-.cloud {filter: grayscale() brightness(8) opacity(0.9); }
-.cloud-gray {filter: grayscale() brightness(5) opacity(0.9); }
+    .section p {
+      margin: 0 0 16px 0;
+      color: #555;
+      font-size: 0.95rem;
+      line-height: 1.4;
+    }
 
-.cloud-shield {  filter: grayscale() brightness(6) drop-shadow(2px 0 0 #99b7c3) 
-    drop-shadow(-2px 0 0 #99b7c3) 
-    drop-shadow(0 2px 0 #99b7c3) 
-    drop-shadow(0 -2px 0 #99b7c3)
-    ;
-  }
+    .row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 24px;
+    }
 
-  .cloud-storm { filter:
-    drop-shadow(2px 0 0 #052b45) 
-    drop-shadow(-2px 0 0 #052b45) 
-    drop-shadow(0 2px 0 #052b45) 
-    drop-shadow(0 -2px 0 #052b45)
-  ;
-  }
+    .item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
 
-.star { filter: drop-shadow(0 0 8px rgba(255, 220, 30, 0.9)); }
-.sparkle { filter: blur(0.5px); }
-.shadow { filter: brightness(0) opacity(0.5) blur(1px); }
+    .item-title {
+      margin-top: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #444;
+    }
 
-.bolt { filter: brightness(1.2) drop-shadow(0 0 12px rgba(255, 220, 30, 0.9)); }
+    img {
+      vertical-align: middle;
+    }
 
-.magnet {
-  filter: drop-shadow(1px 0 0 #fff) 
-          drop-shadow(-1px 0 0 #fff) 
-          drop-shadow(0 1px 0 #fff) 
-          drop-shadow(0 -1px 0 #fff);
-}
+    /* Asset Filter Styles */
+    .unicorn {
+      filter: drop-shadow(2px 0 0 #5f2d79) 
+              drop-shadow(-2px 0 0 #5f2d79) 
+              drop-shadow(0 2px 0 #5f2d79) 
+              drop-shadow(0 -2px 0 #5f2d79);
+    }
 
-.gate-red { filter: brightness(1.5) drop-shadow(0 0 8px rgba(237, 103, 101, 0.8)); }
-.gate-blue { filter: hue-rotate(210deg) brightness(1.4) drop-shadow(0 0 8px rgba(55, 146, 210, 0.8)); }
-.gate-yellow { filter: hue-rotate(45deg) brightness(1.75) drop-shadow(0 0 8px rgba(255, 220, 30, 0.8)); }
+    .rainbow { opacity: 0.8; }
 
+    .cloud { filter: grayscale() brightness(8) opacity(0.9); }
+    .cloud-gray { filter: grayscale() brightness(5) opacity(0.9); }
+
+    .cloud-shield {
+      filter: grayscale() brightness(6) 
+              drop-shadow(2px 0 0 #99b7c3) 
+              drop-shadow(-2px 0 0 #99b7c3) 
+              drop-shadow(0 2px 0 #99b7c3) 
+              drop-shadow(0 -2px 0 #99b7c3);
+    }
+
+    .cloud-storm {
+      filter: drop-shadow(2px 0 0 #052b45) 
+              drop-shadow(-2px 0 0 #052b45) 
+              drop-shadow(0 2px 0 #052b45) 
+              drop-shadow(0 -2px 0 #052b45);
+    }
+
+    .star { filter: drop-shadow(0 0 8px rgba(255, 220, 30, 0.9)); }
+    .sparkle { filter: blur(0.5px); }
+    .shadow { filter: brightness(0) opacity(0.5) blur(1px); }
+
+    .bolt { filter: brightness(1.2) drop-shadow(0 0 12px rgba(255, 220, 30, 0.9)); }
+
+    .magnet {
+      filter: drop-shadow(2px 0 0 #fff) 
+              drop-shadow(-2px 0 0 #fff) 
+              drop-shadow(0 2px 0 #fff) 
+              drop-shadow(0 -2px 0 #fff);
+    }
+
+    .gate-red { filter: brightness(1.5) drop-shadow(0 0 8px rgba(237, 103, 101, 0.8)); }
+    .gate-blue { filter: hue-rotate(210deg) brightness(1.4) drop-shadow(0 0 8px rgba(55, 146, 210, 0.8)); }
+    .gate-yellow { filter: hue-rotate(45deg) brightness(1.75) drop-shadow(0 0 8px rgba(255, 220, 30, 0.8)); }
   </style>
 </head>
 <body>
-  <center>
-    <br />
-    <img src="assets/favicon.svg" width="100" height="100" />
-    <br />
-    <img src="assets/unicorn.svg" width="220" height="316" />
-    <img src="assets/unicorn.svg" width="220" height="316" class="unicorn" />
-    <br />
-    <img src="assets/rainbow.svg" width="700" height="400" />
-    <img src="assets/rainbow.svg" width="700" height="400" class="rainbow" />
-    <br />
-    <img src="assets/cloud.svg" width="400" height="200" />
-    <img src="assets/cloud.svg" width="400" height="200" class="cloud" />
-    <img src="assets/cloud.svg" width="400" height="200" class="cloud-gray" />
-    <br />
-    <img src="assets/cloud.svg" width="200" height="100" class="cloud-shield" />
-    <img src="assets/cloud.svg" width="200" height="100" class="cloud-storm" />
-    <img src="assets/cloud.svg" width="200" height="100" class="shadow" />
-    <br />
-    <img src="assets/star.svg" width="140" height="140" />
-    <img src="assets/star.svg" width="140" height="140" class="star" />
-    <img src="assets/star.svg" width="140" height="140" class="shadow" />
-    <br />
-    <img src="assets/bolt.svg" width="140" height="120" />
-    <img src="assets/bolt.svg" width="140" height="120" class="bolt"/>
-    <img src="assets/bolt.svg" width="140" height="120" class="shadow"/>
-    <br />
-    <img src="assets/magnet.svg" width="140" height="140" />
-    <img src="assets/magnet.svg" width="140" height="140" class="magnet"/>
-    <img src="assets/magnet.svg" width="140" height="140" class="shadow"/>
-    <br />
-    <img src="assets/gate.svg" width="200" height="200" />
-    <img src="assets/gate.svg" width="200" height="200" class="gate-yellow" />
-    <img src="assets/gate.svg" width="200" height="200" class="gate-blue" />
-    <img src="assets/gate.svg" width="200" height="200" class="gate-red" />
-    <br />
-    <img src="assets/sparkle.svg" width="100" height="100" />
-    <img src="assets/sparkle.svg" width="100" height="100" class="sparkle" />
-    <img src="assets/sparkle.svg" width="100" height="100" class="shadow" />
+
+  <!-- Game Icon Header -->
+  <div class="section" style="max-width: 300px;">
+    <h2>Game Logo</h2>
+    <div class="row">
+      <img src="assets/favicon.svg" width="64" height="64" alt="Favicon" />
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>🦄 Player Characters</h2>
+
+    <div class="row">
+      <img src="assets/unicorn-side.svg" height="160" class="unicorn" alt="Unicorn Side Outlined" />
+      <img src="assets/unicorn-back.svg" height="160" class="unicorn" alt="Unicorn Back Outlined" />
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>🌟 The 3 Power-Ups</h2>
     
-   
-  </center>
+    <div class="row">
+      <div class="item">
+        <img src="assets/magnet.svg" width="100" height="70" class="magnet" alt="Star Magnet" />
+        <span class="item-title">🧲 Star Magnet</span>
+        <small style="color:#666; max-width: 200px;">Pulls stars from nearby lanes (5s)</small>
+      </div>
+
+      <div class="item">
+        <img src="assets/cloud.svg" width="100" height="50" class="cloud-shield" alt="Cloud Shield" />
+        <span class="item-title">🛡️ Cloud Shield</span>
+        <small style="color:#666; max-width: 200px;">1-hit safety net absorbing next crash</small>
+      </div>
+
+      <div class="item">
+        <img src="assets/rainbow.svg" width="200" height="110" class="rainbow" alt="Rainbow Rush" />
+        <span class="item-title">⚡ Rainbow Rush</span>
+        <small style="color:#666; max-width: 220px;">Boosts speed, invincibility & converts hazards (3s)</small>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>🌩️ The 3 Hazards</h2>
+
+    <div class="row">
+      <div class="item">
+        <div style="display: flex; gap: 10px;">
+          <img src="assets/gate.svg" width="80" height="80" class="gate-yellow" alt="Yellow Gate" />
+          <img src="assets/gate.svg" width="80" height="80" class="gate-blue" alt="Blue Gate" />
+          <img src="assets/gate.svg" width="80" height="80" class="gate-red" alt="Red Gate" />
+        </div>
+        <span class="item-title">🌈 Color Gate</span>
+        <small style="color:#666; max-width: 260px;">Passable only if active color matches—otherwise dodge!</small>
+      </div>
+
+      <div class="item">
+        <img src="assets/cloud.svg" width="100" height="50" class="cloud-storm" alt="Storm Cloud" />
+        <img src="assets/bolt.svg" width="100" height="60" class="bolt" alt="Lightning Bolt" />
+        <span class="item-title">🌩️ Storm Cloud</span>
+        <small style="color:#666; max-width: 200px;">Blocks a single lane (reactive dodge)</small>
+      </div>
+
+      <div class="item">
+        <div style="display: flex; gap: 10px;">
+          <img src="assets/cloud.svg" width="100" height="50" class="cloud" alt="Barrier Cloud 1" />
+          <img src="assets/cloud.svg" width="100" height="50" class="cloud-gray" alt="Barrier Cloud 2" />
+        </div>
+        <span class="item-title">🚧 Dual Barrier</span>
+        <small style="color:#666; max-width: 220px;">Blocks two lanes at once (tests precision)</small>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>⭐ Collectibles & FX</h2>
+    <div class="row">
+      <div class="item">
+        <img src="assets/star.svg" width="80" height="80" class="star" alt="Star Glow" />
+        <span class="item-title">Collectible Star</span>
+      </div>
+      <div class="item">
+        <img src="assets/sparkle.svg" width="80" height="80" class="sparkle" alt="Sparkle" />
+        <span class="item-title">Sparkle FX</span>
+      </div>
+      <div class="item">
+        <img src="assets/star.svg" width="80" height="80" class="shadow" alt="Shadow" />
+        <span class="item-title">Shadow Variant</span>
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>
