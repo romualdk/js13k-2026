@@ -133,8 +133,8 @@
       <div id="entities-layer" style="position: absolute; width: 100%; height: 100%; transform-style: preserve-3d; top: 0; left: 0; pointer-events: none;"></div>
       
       <div class="player" id="player">
-        <img src="assets/unicorn.svg" class="player-shadow-unicorn" />
-        <img src="assets/unicorn.svg" class="unicorn-img" width="145" height="204" />
+        <img src="assets/unicorn-back.svg" class="player-shadow-unicorn" id="shadow-img" />
+        <img src="assets/unicorn-back.svg" class="unicorn-img" id="unicorn-img" width="145" height="204" />
       </div>
       
       <div class="rainbow"><img src="assets/rainbow.svg" /></div>
@@ -144,6 +144,8 @@
   <script>
     // System Variables
     const player = document.getElementById('player');
+    const unicornImg = document.getElementById('unicorn-img');
+    const shadowImg = document.getElementById('shadow-img');
     const roadContainer = document.getElementById('road-container');
     const entitiesLayer = document.getElementById('entities-layer');
     const scoreDisplay = document.getElementById('score-display');
@@ -162,12 +164,20 @@
       player.style.left = `${lanePercentages[currentLane]}%`;
 
       if (currentLane === 0) {
+        // Left lane: Side view facing right (no flip)
+        unicornImg.src = "assets/unicorn-side.svg";
+        shadowImg.src = "assets/unicorn-side.svg";
         player.classList.remove('facing-left');
       } else if (currentLane === 2) {
+        // Right lane: Side view facing left (flipped horizontally)
+        unicornImg.src = "assets/unicorn-side.svg";
+        shadowImg.src = "assets/unicorn-side.svg";
         player.classList.add('facing-left');
-      } else if (currentLane === 1 && prevLane !== undefined) {
-        // Toggle cleverly handles keeping the prior direction when landing in the center
-        player.classList.toggle('facing-left', prevLane === 2);
+      } else if (currentLane === 1) {
+        // Center lane: Back view
+        unicornImg.src = "assets/unicorn-back.svg";
+        shadowImg.src = "assets/unicorn-back.svg";
+        player.classList.remove('facing-left');
       }
     }
 
