@@ -91,17 +91,48 @@
       position: absolute; width: 100px; height: 100px; transform-style: preserve-3d;
       transform: translateX(-50%) rotateX(-68deg); transform-origin: bottom center;
     }
-    .star { 
-      position: absolute; left: 0; top: 0; width: 100%; height: 100%; z-index: 2;
-      filter: drop-shadow(0 0 8px rgba(255, 220, 30, 0.9)); transform: translateY(-25px);
+   .star { 
+      position: absolute;
+      left: -50%;
+      top: -50%;
+      width: 200%;
+      height: 200%;
+      z-index: 2;
+      filter: drop-shadow(0 0 8px rgba(255, 220, 30, 0.9));
       animation: floatStar 1.2s ease-in-out infinite alternate;
     }
     .shadow {
-      position: absolute; bottom: -30px; left: 50%; width: 60px; height: 60px; z-index: 1;
+      position: absolute; bottom: -30px; left: 50%; width: 120px; height: 120px; z-index: 1;
       transform: translateX(-50%) rotateX(68deg); transform-origin: center center;
       filter: brightness(0) opacity(0.4) blur(4px);
       animation: floatShadow 1.2s ease-in-out infinite alternate;
     }
+
+    .gate {
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      width: 400%;
+      height: auto;
+      transform: translateX(-50%);
+      transform-origin: bottom center;
+      z-index: 2;
+    }
+    .gate-shadow {
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      width: 400%;
+      height: auto;
+      transform: translateX(-50%) rotateX(68deg);
+      transform-origin: bottom center;
+      filter: brightness(0) opacity(0.25) blur(4px);
+      z-index: 1;
+      pointer-events: none;
+    }
+    .gate-red { filter: brightness(1.5) drop-shadow(0 0 8px rgba(237, 103, 101, 0.8)); }
+    .gate-blue { filter: hue-rotate(210deg) brightness(1.4) drop-shadow(0 0 8px rgba(55, 146, 210, 0.8)); }
+    .gate-yellow { filter: hue-rotate(45deg) brightness(1.75) drop-shadow(0 0 8px rgba(255, 220, 30, 0.8)); }
 
     /* --- 5. KEYFRAMES --- */
     @keyframes gallop {
@@ -113,19 +144,40 @@
       to { transform: translateX(-50%) rotateX(68deg) scale(1.1); opacity: 0.3; }
     }
     @keyframes floatStar {
-      from { transform: translateY(-60px); }
-      to { transform: translateY(-120px); }
+      from { transform: translateY(-80px); }
+      to { transform: translateY(-160px); }
     }
     @keyframes floatShadow {
       from { transform: translateX(-50%) rotateX(68deg) scale(1); opacity: 0.6; }
       to { transform: translateX(-50%) rotateX(68deg) scale(2); opacity: 0.4; }
     }
+
+  @keyframes flashRed {
+  0%, 100% { 
+    filter: drop-shadow(2px 0 0 #5f2d79) 
+            drop-shadow(-2px 0 0 #5f2d79) 
+            drop-shadow(0 2px 0 #5f2d79) 
+            drop-shadow(0 -2px 0 #5f2d79);
+  }
+  50% { 
+    filter: drop-shadow(2px 0 0 #5f2d79) 
+            drop-shadow(-2px 0 0 #5f2d79) 
+            drop-shadow(0 2px 0 #5f2d79) 
+            drop-shadow(0 -2px 0 #5f2d79) 
+            sepia(1) hue-rotate(-50deg) saturate(12) brightness(0.9);
+  }
+}
+
+.hit-red {
+  /* Runs flashRed alongside gallop animation */
+  animation: gallop 0.8s ease-in-out infinite alternate, flashRed 0.5s ease-in-out !important;
+}
   </style>
 </head>
 <body>
 
   <div class="game-viewport" id="viewport">
-    <div class="ui-layer" id="score-display">DISTANCE: 0m</div>
+    <div class="ui-layer" id="score-display">DISTANCE: 0m | POINTS: 0 | HEALTH: 2</div>
 
     <div class="road-container" id="road-container">
       <div class="road-lanes">
@@ -154,9 +206,16 @@
     const scoreDisplay = document.getElementById('score-display');
     const viewport = document.getElementById('viewport');
 
+    // Lane 0 = Yellow, Lane 1 = Blue, Lane 2 = Red
+    const laneColors = ['yellow', 'blue', 'red'];
+    const gateColors = ['yellow', 'blue', 'red'];
+
     // Game State
-    let currentLane = 1; // 0: Left, 1: Center, 2: Right
+    let currentLane = 1;
     let distance = 0;
+    let points = 0;
+    let health = 2;
+    let nextHealthThreshold = 50; // Tracks the next point target for gaining health
     let spawnTimer = 0;
     const gameSpeed = 6;
     const entities = [];
@@ -208,21 +267,34 @@
     // Entity Spawner
     function spawnEntity() {
       const lane = Math.floor(Math.random() * 3);
+      const isGate = Math.random() < 0.45; // ~45% chance to spawn a gate
       const el = document.createElement('div');
       el.className = 'entity';
-      el.innerHTML = '<img src="assets/star.svg" class="shadow" /><img src="assets/star.svg" class="star" />';
+      
+      let type = 'star';
+      let color = null;
+
+      if (isGate) {
+        type = 'gate';
+        color = gateColors[Math.floor(Math.random() * gateColors.length)];
+        el.innerHTML = `<img src="assets/gate.svg" class="gate-shadow" /><img src="assets/gate.svg" class="gate gate-${color}" />`;
+      } else {
+        el.innerHTML = '<img src="assets/star.svg" class="shadow" /><img src="assets/star.svg" class="star" />';
+      }
       
       el.style.left = `${lanePercentages[lane]}%`;
       el.style.top = '-100px';
 
       entitiesLayer.appendChild(el);
-      entities.push({ element: el, lane: lane, y: -100 });
+      // Store 'type' and 'color' on the entity object
+      // Add hasCollided: false to the entity object
+      entities.push({ element: el, lane: lane, y: -100, type: type, color: color, hasCollided: false });
     }
 
     // Main Game Loop
     function gameLoop() {
-      distance += 0.5;
-      scoreDisplay.innerText = `DISTANCE: ${Math.floor(distance)}m`;
+      distance += 0.1;
+      scoreDisplay.innerText = `DISTANCE: ${Math.floor(distance)}m | POINTS: ${points} | HEALTH: ${health}`;
 
       if (++spawnTimer > 45) {
         spawnEntity();
@@ -236,19 +308,68 @@
         ent.y += gameSpeed;
         ent.element.style.top = `${ent.y}px`;
 
-        // Unified cleanup logic (check for collision AND out of bounds)
-        const isColliding = ent.y > containerHeight - 140 && ent.y < containerHeight - 80 && ent.lane === currentLane;
-        const isOutOfBounds = ent.y > containerHeight + 100;
+        const outOfBoundsThreshold = ent.type === 'gate' ? containerHeight + 350 : containerHeight + 100;
+        const isOutOfBounds = ent.y > outOfBoundsThreshold;
 
-        if (isColliding || isOutOfBounds) {
-          ent.element.remove();
-          entities.splice(i, 1);
+        // Check collision only if the entity hasn't been hit yet
+        const isColliding = !ent.hasCollided && ent.y > containerHeight - 140 && ent.y < containerHeight - 80 && ent.lane === currentLane;
+
+        if (isColliding) {
+          ent.hasCollided = true; // Prevents repeated point scoring while passing through
+
+          if (ent.type === 'gate') {
+            const activeColor = laneColors[currentLane];
+            if (ent.color === activeColor) {
+              points += 5;
+            } else {
+              points -= 10;
+              // Trigger Red Blink Animation
+              unicornImg.classList.remove('hit-red');
+              void unicornImg.offsetWidth; // Force CSS reflow to allow restarting rapid hits
+              unicornImg.classList.add('hit-red');
+
+              setTimeout(() => {
+                unicornImg.classList.remove('hit-red');
+              }, 500);
+            }
+            // Note: Gate is NOT removed here—it keeps moving down the lane
+          } else if (ent.type === 'star') {
+            points += 1;
+            ent.element.remove(); // Stars disappear when collected
+            entities.splice(i, 1);
+          }
+
+          // Health and point boundary logic
+          if (points <= 0) {
+            points = 0;
+            health--;
+            if (health <= 0) {
+              resetGame();
+              break;
+            }
+          } else if (points >= nextHealthThreshold) {
+            health++;
+            nextHealthThreshold += 50; // Advance milestone to 100, 150, 200... without resetting points
+          }
+
+          scoreDisplay.innerText = `DISTANCE: ${Math.floor(distance)}m | POINTS: ${points} | HEALTH: ${health}`;
         }
+
       }
 
       requestAnimationFrame(gameLoop);
     }
 
+    function resetGame() {
+      distance = 0;
+      points = 0;
+      health = 2;
+      nextHealthThreshold = 50;
+      scoreDisplay.innerText = `DISTANCE: 0m | POINTS: 0 | HEALTH: 2`;
+      entities.forEach(ent => ent.element.remove());
+      entities.length = 0;
+    }
+  
     // Initialize Game
     updatePlayerPosition();
     requestAnimationFrame(gameLoop);
