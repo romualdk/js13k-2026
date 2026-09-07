@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Rainbow Runner</title>
+    <meta name="description" content="Unicorn running minigame! Collect stars and race down the rainbow road.">
+    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+    <link rel="manifest" href="manifest.json">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body, html { 
+            width: 100%; 
+            height: 100%; 
+            overflow: hidden; 
+            background-color: #fff2f9; 
+            background-image: 
+                radial-gradient(circle at top left, #ff9de2 0%, transparent 60%),
+                radial-gradient(circle at top right, #72f5ff 0%, transparent 60%),
+                radial-gradient(circle at bottom right, #ffe17d 0%, transparent 60%),
+                radial-gradient(circle at bottom left, #ffb3c6 0%, transparent 60%); 
+        }
+        
+        .canvas-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        #cloudCanvas { z-index: 1; }
+        #gameCanvas { z-index: 2; }
+        #sparkleCanvas { z-index: 3; pointer-events: none; }
+
+        /* --- GAME HUD --- */
+        #gameHUD {
+            position: absolute;
+            top: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 48px;
+            background: rgba(30, 20, 40, 0.85);
+            padding: 10px 48px;
+            border-radius: 40px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+            border: 3px solid rgba(255, 182, 215, 0.4);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-weight: 700;
+            font-size: 32px;
+            color: #ff9de2;
+            z-index: 10;
+            pointer-events: none;
+            backdrop-filter: blur(8px);
+            align-items: center;
+        }
+
+        .hud-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .hud-icon {
+            width: 48px;
+            height: 48px;
+            object-fit: contain;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+            margin-top: -4px;
+            margin-bottom: -4px;
+        }
+
+        .hud-icon.rainbow-left-half {
+            width: 80px;
+            height: 80px;
+            object-position: left;
+            clip-path: inset(0 50% 0 0);
+            margin-right: -30px;
+            margin-top: -6px;
+            margin-bottom: -6px;
+        }
+
+        #fpsCounter {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: #00ffcc;
+            font-family: monospace;
+            font-size: 14px;
+            padding: 6px 10px;
+            border-radius: 4px;
+            pointer-events: none;
+            display: none;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+
+<div id="gameHUD">
+    <div class="hud-item"><img src="assets/rainbow.svg" class="hud-icon rainbow-left-half" alt="Rainbows"><span id="hudRainbows">0</span></div>
+    <div class="hud-item"><img src="assets/unicorn-side.svg" class="hud-icon" alt="Distance"><span id="hudDist">0</span>m</div>
+    <div class="hud-item"><img src="assets/star.svg" class="hud-icon" alt="Stars"><span id="hudStars">0</span></div>
+</div>
+
+<div id="fpsCounter">FPS: 60 | Speed: 1.00x | Entities: 0 | Time: 00:00 | Dist: 0.00m | Stars: 0 | Rainbows: 0</div>
+<div class="canvas-container">
+    <canvas id="cloudCanvas"></canvas>
+    <canvas id="gameCanvas"></canvas>
+    <canvas id="sparkleCanvas"></canvas>
+</div>
+
+<script>
+const cloudCanvas=document.getElementById("cloudCanvas"),cloudCtx=cloudCanvas.getContext("2d"),canvas=document.getElementById("gameCanvas"),ctx=canvas.getContext("2d"),sparkleCanvas=document.getElementById("sparkleCanvas"),sparkleCtx=sparkleCanvas.getContext("2d"),fpsElem=document.getElementById("fpsCounter"),hudStarsElem=document.getElementById("hudStars"),hudDistElem=document.getElementById("hudDist"),hudRainbowsElem=document.getElementById("hudRainbows");let gameTime=0,gameDistance=0,collectedStars=0,passedRainbows=0,globalSpeedMultiplier=1,lastSpawnedGateType=null,shakeDuration=0,shakeIntensity=0,shakeOffsetX=0,shakeOffsetY=0;function triggerCameraShake(e=20,t=.4){shakeIntensity=e,shakeDuration=t}const player={lane:1,currentX:0,size:220,facing:"right",yOffset:0,yVelocity:0};let debugMode=!1,showCloudLayer=!0,showMainLayer=!0,showSparkleLayer=!0;window.addEventListener("keydown",e=>{if(("ArrowLeft"===e.key||"a"===e.key||"A"===e.key)&&player.lane>0){const e=player.lane;player.lane--,2===e?player.facing="left":1===e&&(player.facing="right")}if(("ArrowRight"===e.key||"d"===e.key||"D"===e.key)&&player.lane<2){const e=player.lane;player.lane++,0===e?player.facing="right":1===e&&(player.facing="left")}"ArrowUp"!==e.key&&"w"!==e.key&&"W"!==e.key&&" "!==e.key||0===player.yOffset&&(player.yVelocity=650),"`"!==e.key&&"~"!==e.key||(debugMode=!debugMode,fpsElem.style.display=debugMode?"block":"none"),"1"===e.key&&(showCloudLayer=!showCloudLayer,cloudCanvas.style.display=showCloudLayer?"block":"none"),"2"===e.key&&(showMainLayer=!showMainLayer,canvas.style.display=showMainLayer?"block":"none"),"3"===e.key&&(showSparkleLayer=!showSparkleLayer,sparkleCanvas.style.display=showSparkleLayer?"block":"none")});const DEFAULT_CLOUD_SVG='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 100"><path fill="%23ffffff" opacity="0.85" d="M30 70 A30 30 0 0 1 60 30 A40 40 0 0 1 130 25 A35 35 0 0 1 170 60 A25 25 0 0 1 150 85 L40 85 A25 25 0 0 1 30 70 Z"/></svg>',DEFAULT_UNICORN_SVG='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="%23ff006e"/><polygon points="50,10 60,30 40,30" fill="%23ffeb3b"/></svg>',ASSETS={star:new Image,sparkle:new Image,gate:new Image,cloud:new Image,rainbow:new Image,unicornSide:new Image};ASSETS.star.src="assets/star.svg",ASSETS.sparkle.src="assets/sparkle.svg",ASSETS.gate.src="assets/gate.svg",ASSETS.cloud.src="assets/cloud.svg",ASSETS.rainbow.src="assets/rainbow.svg",ASSETS.unicornSide.src="assets/unicorn-side.svg",ASSETS.cloud.onerror=()=>{ASSETS.cloud.src=DEFAULT_CLOUD_SVG},ASSETS.unicornSide.onerror=()=>{ASSETS.unicornSide.src=DEFAULT_UNICORN_SVG};const STAR_SPEED=.1,SPARKLE_SPEED=.1,GATE_SPEED=.1,CLOUD_SPEED=.1,RAINBOW_SPEED=.1,SPAWN_INTERVAL=.5,RAINBOW_SPAWN_INTERVAL=5,FIXED_STAR_SIZE=130;let spawnTimer=0,nextSpawnLaneIndex=0;const spawnLaneSequence=[0,1,2,1];let rainbowTimer=0;const particles=[];function createStarBurst(e,t,a=14,n=1){for(let s=0;s<a;s++){const l=2*Math.PI/a*s+(.4*Math.random()-.2),r=(180+220*Math.random())*n;particles.push({x:e,y:t,vx:Math.cos(l)*r,vy:Math.sin(l)*r,size:(20+25*Math.random())*n,alpha:1,rotation:Math.random()*Math.PI*2,vRot:8*(Math.random()-.5),life:1,decay:(1.8+.8*Math.random())/n})}}function resize(){cloudCanvas.width=window.innerWidth,cloudCanvas.height=window.innerHeight,canvas.width=window.innerWidth,canvas.height=window.innerHeight,sparkleCanvas.width=window.innerWidth,sparkleCanvas.height=window.innerHeight}function getCloudSize(){const e=window.innerWidth<768?3.5:9;return(120+100*Math.random())*e}window.addEventListener("resize",resize),resize();const projection={getCubeParams(){const e=canvas.width,t=canvas.height;return{size:.35*Math.min(e,t),zBack:25e3,zFront:150,fov:400}},project(e){const{size:t,zBack:a,zFront:n,fov:s}=this.getCubeParams(),l=canvas.width/2,r=canvas.height/2,o=a-(a-n)*e.z,i=s/o;return{x:e.x*t*i+l,y:(e.yRel-.5)*t*2*i+r,scale:i,currentZ:o}}};function getRandomFullSpanX(){return 5*Math.random()-2.5}const entities=[];for(let e=0;e<200;e++){const e=Math.random();entities.push({type:"sparkle",x:getRandomFullSpanX(),yRel:Math.random(),z:e,size:10+16*Math.random(),speed:.1})}for(let e=0;e<100;e++){const e=Math.random();entities.push({type:"cloud",x:10*getRandomFullSpanX(),yRel:1.5+.5*Math.random(),z:e,size:1.5*getCloudSize(),speed:.1})}function resetEntity(e){e.z=0,"sparkle"===e.type?(e.x=getRandomFullSpanX(),e.yRel=Math.random(),e.size=10+16*Math.random()):"cloud"===e.type&&(e.x=3*getRandomFullSpanX(),e.yRel=1.3+.5*Math.random(),e.size=getCloudSize())}function renderWireframeBox(){const{size:e,zBack:t,zFront:a}=projection.getCubeParams(),n=[{x:-e,y:-e,z:a},{x:e,y:-e,z:a},{x:e,y:e,z:a},{x:-e,y:e,z:a}],s=[{x:-e,y:-e,z:t},{x:e,y:-e,z:t},{x:e,y:e,z:t},{x:-e,y:e,z:t}].map(n=>projection.project({x:n.x/e,yRel:.5+n.y/(2*e),z:(t-n.z)/(t-a)})),l=n.map(n=>projection.project({x:n.x/e,yRel:.5+n.y/(2*e),z:(t-n.z)/(t-a)}));ctx.strokeStyle="#00a8ff",ctx.lineWidth=2,ctx.beginPath(),s.forEach((e,t)=>0===t?ctx.moveTo(e.x,e.y):ctx.lineTo(e.x,e.y)),ctx.closePath(),ctx.stroke(),ctx.beginPath(),l.forEach((e,t)=>0===t?ctx.moveTo(e.x,e.y):ctx.lineTo(e.x,e.y)),ctx.closePath(),ctx.stroke();for(let e=0;e<4;e++)ctx.beginPath(),ctx.moveTo(s[e].x,s[e].y),ctx.lineTo(l[e].x,l[e].y),ctx.stroke()}function renderSpawnerIndicators(){const{size:e}=projection.getCubeParams(),t=2*e/3,a=.5+e/(2*e);for(let n=0;n<3;n++){const s=(n*t-e+t/2)/e,l=projection.project({x:s,yRel:a,z:0});ctx.strokeStyle="#ff00ee",ctx.fillStyle="rgba(255, 0, 238, 0.2)",ctx.lineWidth=2,ctx.beginPath(),ctx.arc(l.x,l.y,14*l.scale,0,2*Math.PI),ctx.fill(),ctx.stroke(),ctx.beginPath(),ctx.moveTo(l.x-10*l.scale,l.y),ctx.lineTo(l.x+10*l.scale,l.y),ctx.moveTo(l.x,l.y-10*l.scale),ctx.lineTo(l.x,l.y+10*l.scale),ctx.stroke()}}function getPlayerBoundingBox(){const{size:e}=projection.getCubeParams(),t=2*e/3,a=e,n=projection.project({x:0,yRel:.5+a/(2*e),z:-5}),s=(-e+player.lane*t+t/2)/e,l=projection.project({x:s,yRel:.5+a/(2*e),z:1}),r=canvas.height-40-player.yOffset,o=(r-n.y)/(l.y-n.y),i=n.x+(l.x-n.x)*o,c=player.size,y=c*(60/85);return{x:i-.4*y,y:r+(0===player.yOffset?8*Math.sin(14*gameTime):0)-c/2-.4*c,width:.8*y,height:.8*c}}function update(e,t){gameTime+=e,gameDistance+=10*globalSpeedMultiplier*e,(player.yOffset>0||0!==player.yVelocity)&&(player.yVelocity-=1800*e,player.yOffset+=player.yVelocity*e,player.yOffset<0&&(player.yOffset=0,player.yVelocity=0)),shakeDuration>0&&(shakeDuration-=e,shakeOffsetX=2*(Math.random()-.5)*shakeIntensity,shakeOffsetY=2*(Math.random()-.5)*shakeIntensity,shakeDuration<=0&&(shakeOffsetX=0,shakeOffsetY=0));const{size:a}=projection.getCubeParams(),n=2*a/3,s=(-a+player.lane*n+n/2)/a;player.currentX+=15*(s-player.currentX)*e,spawnTimer+=e;const l=.5/globalSpeedMultiplier;if(spawnTimer>=l){spawnTimer-=l;const e=spawnLaneSequence[nextSpawnLaneIndex];nextSpawnLaneIndex=(nextSpawnLaneIndex+1)%spawnLaneSequence.length;const t=.5+a/(2*a),s=Math.random();if(s<.67){const s=(e*n-a+n/2)/a;entities.push({type:"star",lane:e,x:s,yRel:t-.08,z:0,size:130,speed:.1,collected:!1}),lastSpawnedGateType=null}else if(s<.92||"green"===lastSpawnedGateType){const s=(e*n-a+n/2)/a;entities.push({type:"gate",gateType:"red",lane:e,x:s,yRel:t-.05,z:0,size:140,speed:.1,hit:!1}),lastSpawnedGateType="red"}else entities.push({type:"gate",gateType:"green",lane:-1,x:0,yRel:t-.05,z:0,size:2*a,speed:.1,hit:!1}),lastSpawnedGateType="green"}rainbowTimer+=e;const r=5/globalSpeedMultiplier;rainbowTimer>=r&&(rainbowTimer-=r,entities.push({type:"rainbow",x:0,yRel:.5,z:0,speed:.1,passed:!1}));const o=getPlayerBoundingBox();for(let t=entities.length-1;t>=0;t--){const a=entities[t];if(a.z+=a.speed*globalSpeedMultiplier*e,"star"===a.type&&!a.collected&&a.z>=.98&&a.lane===player.lane){const e=projection.project(a),n=a.size*e.scale,s={x:e.x-.4*n,y:e.y-.4*n,width:.8*n,height:.8*n};if(o.x<s.x+s.width&&o.x+o.width>s.x&&o.y<s.y+s.height&&o.y+o.height>s.y){a.collected=!0,collectedStars++,createStarBurst(e.x,e.y,14,1),entities.splice(t,1);continue}}if("gate"===a.type&&!a.hit&&a.z>=.95){let e=!1;if("red"===a.gateType?a.lane===player.lane&&(e=!0):"green"===a.gateType&&player.yOffset<60&&(e=!0),e){const e=projection.project(a);let n;if("red"===a.gateType){const t=a.size*e.scale;n={x:e.x-.4*t,y:e.y-.4*t,width:.8*t,height:.8*t}}else{const t=a.size*e.scale,s=.4*a.size*e.scale;n={x:e.x-.5*t,y:e.y-.5*s,width:t,height:s}}if(o.x<n.x+n.width&&o.x+o.width>n.x&&o.y<n.y+n.height&&o.y+o.height>n.y){a.hit=!0,collectedStars="red"===a.gateType?Math.floor(collectedStars/2):Math.max(0,Math.floor(2*collectedStars/3)),globalSpeedMultiplier=1,triggerCameraShake(25,.45),createStarBurst(e.x,e.y,45,2.2),entities.splice(t,1);continue}}}if("rainbow"===a.type&&!a.passed&&a.z>=1&&(a.passed=!0,passedRainbows++,globalSpeedMultiplier*=1.05),a.z>=0){const e=projection.project(a);let n=!1;if("star"===a.type||"gate"===a.type||"rainbow"===a.type){const t=("rainbow"===a.type?1400:a.size)*e.scale,s=100,l=e.y-.5*t,r=e.y+.5*t,o=e.x-.5*t,i=e.x+.5*t;n=a.z>=1||l>canvas.height+s||r<-s||i<-s||o>canvas.width+s}else if("sparkle"===a.type||"cloud"===a.type){const t=a.size*e.scale,s="cloud"===a.type?.5*t:t,l=e.y-s/2,r=e.y+s/2,o=e.x-t/2,i=e.x+t/2;n=l>canvas.height||r<0||i<0||o>canvas.width||a.z>=1}n&&("star"===a.type||"gate"===a.type||"rainbow"===a.type?entities.splice(t,1):resetEntity(a))}}for(let t=particles.length-1;t>=0;t--){const a=particles[t];a.x+=a.vx*e,a.y+=a.vy*e,a.rotation+=a.vRot*e,a.life-=a.decay*e,a.alpha=Math.max(0,a.life),a.life<=0&&particles.splice(t,1)}hudStarsElem.textContent=collectedStars,hudDistElem.textContent=gameDistance.toFixed(0),hudRainbowsElem.textContent=passedRainbows}function renderLanes(){const{size:e}=projection.getCubeParams(),t=(e,t)=>`rgba(${parseInt(e.slice(1,3),16)}, ${parseInt(e.slice(3,5),16)}, ${parseInt(e.slice(5,7),16)}, ${t})`,a=[{c1:"#ffbe0b",c2:"#fb5607"},{c1:"#3a86ff",c2:"#8338ec"},{c1:"#ff006e",c2:"#90003a"}],n=2*e/3,s=e,l=projection.project({x:0,yRel:.5+s/(2*e),z:-5});for(let r=0;r<3;r++){const o=r*n-e,i=o+n,c=projection.project({x:i/e,yRel:.5+s/(2*e),z:1}),y=projection.project({x:o/e,yRel:.5+s/(2*e),z:1}),p=(e,t)=>{if(t.y>=canvas.height)return t;const a=(canvas.height-e.y)/(t.y-e.y);return{x:e.x+(t.x-e.x)*a,y:canvas.height}},d=p(l,c),f=p(l,y),h=l.x,x=l.y,g=(y.x+c.x)/2,u=(y.y+c.y)/2,{c1:S,c2:m}=a[r],w=ctx.createLinearGradient(h,x,g,u);w.addColorStop(0,t(S,0)),w.addColorStop(.1,t(S,1)),w.addColorStop(.5,m),ctx.save(),ctx.fillStyle=w,ctx.beginPath(),ctx.moveTo(l.x,l.y),ctx.lineTo(d.x,d.y),ctx.lineTo(f.x,f.y),ctx.closePath(),ctx.fill();const k=ctx.createLinearGradient(h,x,g,u);k.addColorStop(0,"rgba(255, 255, 255, 0)"),k.addColorStop(.1,"rgba(255, 255, 255, 0.4)"),k.addColorStop(1,"rgba(255, 255, 255, 0.4)"),ctx.strokeStyle=k,ctx.lineWidth=1,ctx.stroke(),ctx.restore()}}function renderPlayer(){const{size:e}=projection.getCubeParams(),t=2*e/3,a=e,n=projection.project({x:0,yRel:.5+a/(2*e),z:-5}),s=(-e+player.lane*t+t/2)/e,l=projection.project({x:s,yRel:.5+a/(2*e),z:1}),r=canvas.height-40-player.yOffset,o=(r-n.y)/(l.y-n.y),i=n.x+(l.x-n.x)*o,c=player.size,y=0===player.yOffset?8*Math.sin(14*gameTime*Math.sqrt(globalSpeedMultiplier)):0,p=.03*Math.sin(7*gameTime);ctx.save(),ctx.translate(i,r+y),ctx.rotate(p);const d=ASSETS.unicornSide,f=c*(60/85);"left"===player.facing&&ctx.scale(-1,1),d&&d.complete&&0!==d.naturalWidth?ctx.drawImage(d,-f/2,-c,f,c):(ctx.fillStyle="#ff006e",ctx.beginPath(),ctx.arc(0,-c/2,c/4,0,2*Math.PI),ctx.fill()),debugMode&&(ctx.strokeStyle="#00ffcc",ctx.lineWidth=2,ctx.strokeRect(-f/2,-c,f,c)),ctx.restore()}function drawRedGate(e,t,a,n,s){e.save();const l=.12*n,r=t+l,o=n-2*l;e.fillStyle="#ffffff",e.fillRect(t,a,l,s),e.fillRect(t+n-l,a,l,s),e.fillStyle="#d32f2f",e.fillRect(t,a,l,.15*s),e.fillRect(t+n-l,a,l,.15*s),e.fillRect(t,a+.85*s,l,.15*s),e.fillRect(t+n-l,a+.85*s,l,.15*s);const i=.16*s,c=(s-3*i)/4;for(let t=0;t<3;t++){const s=a+c+t*(i+c);e.fillStyle="#f8f9fa",e.fillRect(r,s,o,i),e.fillStyle="#d32f2f";const l=1.2*i;e.save(),e.beginPath(),e.rect(r,s,o,i),e.clip();for(let t=r-i;t<r+o+i;t+=2*l)e.beginPath(),e.moveTo(t,s+i),e.lineTo(t+l,s+i),e.lineTo(t+2*l,s),e.lineTo(t+l,s),e.closePath(),e.fill();e.restore(),e.strokeStyle="#9a0007",e.lineWidth=Math.max(1,.015*n),e.strokeRect(r,s,o,i)}e.restore()}function drawGreenGate(e,t,a,n,s){e.save();const l=.06*n,r=t+l,o=n-2*l;e.fillStyle="#2e7d32",e.fillRect(t,a,l,s),e.fillRect(t+n-l,a,l,s),e.fillStyle="#1b5e20",e.fillRect(t,a,l,.15*s),e.fillRect(t+n-l,a,l,.15*s),e.fillRect(t,a+.85*s,l,.15*s),e.fillRect(t+n-l,a+.85*s,l,.15*s);const i=.25*s,c=a+(s-i)/2;e.fillStyle="#4caf50",e.fillRect(r,c,o,i),e.fillStyle="#ffffff";const y=1.2*i;e.save(),e.beginPath(),e.rect(r,c,o,i),e.clip();for(let t=r-i;t<r+o+i;t+=2*y)e.beginPath(),e.moveTo(t,c+i),e.lineTo(t+y,c+i),e.lineTo(t+2*y,c),e.lineTo(t+y,c),e.closePath(),e.fill();e.restore(),e.strokeStyle="#1b5e20",e.lineWidth=Math.max(1,.015*n),e.strokeRect(r,c,o,i),e.restore()}function renderParticles(){if(!showSparkleLayer)return;const e=ASSETS.star;e&&e.complete&&0!==e.naturalWidth&&particles.forEach(t=>{sparkleCtx.save(),sparkleCtx.globalAlpha=t.alpha,sparkleCtx.translate(t.x,t.y),sparkleCtx.rotate(t.rotation);const a=t.size*t.life;sparkleCtx.drawImage(e,-a/2,-a/2,a,a),sparkleCtx.restore()})}function render(e){if(cloudCtx.clearRect(0,0,cloudCanvas.width,cloudCanvas.height),ctx.clearRect(0,0,canvas.width,canvas.height),sparkleCtx.clearRect(0,0,sparkleCanvas.width,sparkleCanvas.height),cloudCtx.save(),ctx.save(),sparkleCtx.save(),cloudCtx.translate(shakeOffsetX,shakeOffsetY),ctx.translate(shakeOffsetX,shakeOffsetY),sparkleCtx.translate(shakeOffsetX,shakeOffsetY),renderLanes(),entities.sort((e,t)=>projection.project(t).currentZ-projection.project(e).currentZ),entities.forEach(e=>{if(e.z<0)return;const t=projection.project(e);let a=0,n=0,s=0,l=0,r=ctx;if("cloud"===e.type?r=cloudCtx:"sparkle"===e.type&&(r=sparkleCtx),"rainbow"===e.type)s=1400*t.scale,l=800*t.scale,a=t.x-s/2,n=t.y-l/2;else if("gate"===e.type)if("red"===e.gateType){const r=e.size*t.scale;s=r,l=r,a=t.x-r/2,n=t.y-r/2}else s=e.size*t.scale,l=.4*e.size*t.scale,a=t.x-s/2,n=t.y-l/2;else if("star"===e.type){const r=e.size*t.scale;s=r,l=r,a=t.x-r/2,n=t.y-r/2}else if("sparkle"===e.type||"cloud"===e.type){const r=e.size*t.scale;s=r,l="cloud"===e.type?.5*r:r,a=t.x-s/2,n=t.y-l/2}r.save(),("cloud"===e.type||"rainbow"===e.type)&&(r.globalAlpha=Math.min(1,Math.max(0,e.z)));const o=ASSETS[e.type];if("gate"===e.type?"red"===e.gateType?drawRedGate(r,a,n,s,l):drawGreenGate(r,a,n,s,l):o&&o.complete&&0!==o.naturalWidth?r.drawImage(o,a,n,s,l):"cloud"===e.type&&(r.fillStyle="rgba(255, 255, 255, 0.85)",r.beginPath(),r.ellipse(t.x,t.y,s/2,l/2,0,0,2*Math.PI),r.fill()),r.restore(),debugMode){let t="#ff0055";"sparkle"===e.type&&(t="#00ffcc"),"cloud"===e.type&&(t="#ffaa00"),"gate"===e.type&&(t="red"===e.gateType?"#ff0000":"#00ff00"),"rainbow"===e.type&&(t="#ff00ff"),r.strokeStyle=t,r.lineWidth=1,r.strokeRect(a,n,s,l)}}),renderPlayer(),renderParticles(),debugMode){renderWireframeBox(),renderSpawnerIndicators();const e=getPlayerBoundingBox();ctx.strokeStyle="#ffff00",ctx.lineWidth=2,ctx.strokeRect(e.x,e.y,e.width,e.height),fpsElem.textContent=`FPS: 60 | Speed: ${globalSpeedMultiplier.toFixed(2)}x | Entities: ${entities.length} | Dist: ${gameDistance.toFixed(0)}m | Stars: ${collectedStars} | Rainbows: ${passedRainbows}`}cloudCtx.restore(),ctx.restore(),sparkleCtx.restore()}let lastTime=0,isPaused=!1;function gameLoop(e){lastTime||(lastTime=e);const t=Math.min((e-lastTime)/1e3,.1);lastTime=e,isPaused||(update(t,e),render(e)),requestAnimationFrame(gameLoop)}document.addEventListener("visibilitychange",()=>{document.hidden?isPaused=!0:(isPaused=!1,lastTime=performance.now())}),requestAnimationFrame(gameLoop);
+</script>
+</body>
+</html>
