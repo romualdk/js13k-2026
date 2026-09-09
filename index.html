@@ -47,6 +47,14 @@
             left: 50%;
             transform: translateX(-50%);
             display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .hud-main-bar {
+            display: flex;
             gap: clamp(16px, 4vw, 48px);
             background: rgba(30, 20, 40, 0.85);
             padding: 8px clamp(16px, 4vw, 48px);
@@ -57,11 +65,35 @@
             font-weight: 700;
             font-size: clamp(18px, 4.5vw, 32px);
             color: #ff9de2;
-            z-index: 10;
-            pointer-events: none;
             backdrop-filter: blur(8px);
             align-items: center;
             white-space: nowrap;
+        }
+
+        #hudBestBadge {
+            margin-top: 6px;
+            background: rgba(25, 15, 35, 0.85);
+            border: 2px solid rgba(255, 215, 0, 0.6);
+            border-radius: 14px;
+            padding: 6px 22px 7px 22px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: clamp(15px, 3.5vw, 20px);
+            font-weight: 700;
+            color: #ffe17d;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+            backdrop-filter: blur(8px);
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .hud-best-icon {
+            width: clamp(24px, 5vw, 32px);
+            height: clamp(24px, 5vw, 32px);
+            object-fit: contain;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+            margin-top: -2px;
         }
 
         .hud-item {
@@ -76,14 +108,6 @@
             object-fit: contain;
             filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
             margin: -4px 0;
-        }
-
-        .hud-icon.rainbow-left-half {
-            width: clamp(45px, 10vw, 80px);
-            height: clamp(45px, 10vw, 80px);
-            object-position: left;
-            clip-path: inset(0 50% 0 0);
-            margin: -6px clamp(-30px, -4vw, -10px) -6px 0;
         }
 
         #fpsCounter {
@@ -121,10 +145,20 @@
         }
 
         #gameOverScreen h1 {
-            font-size: clamp(36px, 8vw, 64px);
-            color: #ff006e;
-            margin-bottom: 20px;
-            text-shadow: 0 4px 20px rgba(255, 0, 110, 0.5);
+            font-size: clamp(32px, 7vw, 56px);
+            color: #72f5ff;
+            margin-bottom: 10px;
+            text-shadow: 0 4px 20px rgba(114, 245, 255, 0.5);
+        }
+
+        #newRecordBanner {
+            font-size: clamp(16px, 4vw, 24px);
+            color: #ffe17d;
+            font-weight: 800;
+            margin-bottom: 15px;
+            text-shadow: 0 2px 10px rgba(255, 225, 125, 0.6);
+            animation: pulse 1s infinite;
+            min-height: 30px;
         }
 
         .stats-container {
@@ -136,16 +170,30 @@
             box-shadow: 0 8px 32px rgba(0,0,0,0.4);
             display: flex;
             flex-direction: column;
-            gap: 12px;
-            min-width: min(320px, 90vw);
+            gap: 16px;
+            min-width: min(340px, 90vw);
             backdrop-filter: blur(8px);
         }
 
         .stat-row {
             display: flex;
+            align-items: center;
             justify-content: space-between;
-            font-size: clamp(16px, 4vw, 22px);
+            font-size: clamp(18px, 4.5vw, 24px);
             gap: 24px;
+        }
+
+        .stat-label-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .stat-icon {
+            width: clamp(28px, 6vw, 36px);
+            height: clamp(28px, 6vw, 36px);
+            object-fit: contain;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
         }
 
         .stat-label {
@@ -174,20 +222,34 @@
 <body>
 
 <div id="gameHUD">
-    <div class="hud-item"><img src="assets/rainbow.svg" class="hud-icon rainbow-left-half" alt="Rainbows"><span id="hudRainbows">0</span></div>
-    <div class="hud-item"><img src="assets/unicorn.svg" class="hud-icon" alt="Distance"><span id="hudDist">0</span>m</div>
-    <div class="hud-item"><img src="assets/star.svg" class="hud-icon" alt="Stars"><span id="hudStars">0</span></div>
-    <div class="hud-item">❤️ <span id="hudLives">3</span></div>
+    <div class="hud-main-bar">
+        <div class="hud-item"><img src="assets/star.svg" class="hud-icon" alt="Stars"><span id="hudStars">0</span></div>
+        <div class="hud-item"><img src="assets/unicorn.svg" class="hud-icon" alt="Distance"><span id="hudDist">0</span>m</div>
+        <div class="hud-item"><img src="assets/heart.svg" class="hud-icon" alt="Lives"><span id="hudLives">3</span></div>
+    </div>
+    <div id="hudBestBadge"><img src="assets/trophy.svg" class="hud-best-icon" alt="Best"> BEST: <span id="hudBest">0</span>m</div>
 </div>
 
 <div id="gameOverScreen">
-    <h1>GAME OVER</h1>
+    <h1 id="gameOverTitle">GREAT RUN! READY FOR THE NEXT?</h1>
+    <div id="newRecordBanner"></div>
     <div class="stats-container">
-        <div class="stat-row"><span class="stat-label">Top Speed:</span> <span id="statTopSpeed" class="stat-value">1.00x</span></div>
-        <div class="stat-row"><span class="stat-label">Top Distance:</span> <span id="statTopDist" class="stat-value">0m</span></div>
-        <div class="stat-row"><span class="stat-label">Top Stars:</span> <span id="statTopStars" class="stat-value">0</span></div>
+        <div class="stat-row" id="distanceStatRow">
+            <div class="stat-label-group">
+                <img src="assets/unicorn.svg" class="stat-icon" alt="Distance">
+                <span class="stat-label">Distance:</span>
+            </div>
+            <span id="statDist" class="stat-value">0 m</span>
+        </div>
+        <div class="stat-row">
+            <div class="stat-label-group">
+                <img src="assets/trophy.svg" class="stat-icon" alt="Top Distance">
+                <span class="stat-label">Top Distance:</span>
+            </div>
+            <span id="statTopDist" class="stat-value">0 m</span>
+        </div>
     </div>
-    <div id="restartHint">Restarting in 5s or click anywhere...</div>
+    <div id="restartHint">Restarting in 10s or click anywhere...</div>
 </div>
 
 <div id="fpsCounter">FPS: 60 | Speed: 1.00x | Entities: 0 | Dist: 0.00m | Stars: 0 | Rainbows: 0</div>
@@ -208,73 +270,60 @@ const fpsElem = document.getElementById('fpsCounter');
 
 const hudStarsElem = document.getElementById('hudStars');
 const hudDistElem = document.getElementById('hudDist');
-const hudRainbowsElem = document.getElementById('hudRainbows');
 const hudLivesElem = document.getElementById('hudLives');
+const hudBestElem = document.getElementById('hudBest');
 const gameOverScreen = document.getElementById('gameOverScreen');
-const statTopSpeed = document.getElementById('statTopSpeed');
+const gameOverTitle = document.getElementById('gameOverTitle');
+const statDist = document.getElementById('statDist');
 const statTopDist = document.getElementById('statTopDist');
-const statTopStars = document.getElementById('statTopStars');
+const distanceStatRow = document.getElementById('distanceStatRow');
+const newRecordBanner = document.getElementById('newRecordBanner');
 const restartHint = document.getElementById('restartHint');
 
-let gameTime = 0; 
-let gameDistance = 0; 
-let collectedStars = 0;
-let passedRainbows = 0;
-let globalSpeedMultiplier = 1.0;
-let lastSpawnedGateType = null;
-let lives = 3;
-let isGameOver = false;
-let restartTimeout = null;
+const gameOverTitles = [
+    "GREAT RUN! READY FOR THE NEXT?",
+    "MAGNIFICENT DASH! KEEP IT UP!",
+    "YOU SPARKLED BRIGHTLY TODAY!",
+    "FANTASTIC EFFORT ON THE RAINBOW!",
+    "STELLAR PERFORMANCE! TRY AGAIN?"
+];
 
-let maxSpeedReached = 1.0;
-let maxDistanceReached = 0;
-let maxStarsReached = 0;
+let gameTime = 0, gameDistance = 0, collectedStars = 0, passedRainbows = 0, lastLifeMilestone = 0;
+let globalSpeedMultiplier = 1.0, lastSpawnedGateType = null, lives = 3;
+let isGameOver = false, restartTimeout = null;
+let topDistanceRecord = parseInt(localStorage.getItem('rainbowRunner_topDist') || '0', 10);
 
-let shakeDuration = 0;
-let shakeIntensity = 0;
-let shakeOffsetX = 0;
-let shakeOffsetY = 0;
+let shakeDuration = 0, shakeIntensity = 0, shakeOffsetX = 0, shakeOffsetY = 0;
+
+let pendingMessages = [];
+let messageQueueTimer = 0;
+
+function updateHUDRecord() {
+    hudBestElem.textContent = Math.max(topDistanceRecord, Math.floor(gameDistance));
+}
+updateHUDRecord();
 
 function triggerCameraShake(intensity = 20, duration = 0.4) {
     shakeIntensity = intensity;
     shakeDuration = duration;
 }
 
-const player = {
-    lane: 1,
-    currentX: 0,
-    size: 220,
-    facing: 'right',
-    yOffset: 0,
-    yVelocity: 0
-};
+const player = { lane: 1, currentX: 0, size: 220, facing: 'right', yOffset: 0, yVelocity: 0 };
 
-let debugMode = false;
-let showCloudLayer = true;
-let showMainLayer = true;
-let showSparkleLayer = true;
+let debugMode = false, showCloudLayer = true, showMainLayer = true, showSparkleLayer = true;
 
 function moveLeft() {
     if (isGameOver) return;
-    if (player.lane > 0) {
-        const oldLane = player.lane--;
-        player.facing = (oldLane === 2) ? 'left' : 'right';
-    }
+    if (player.lane > 0) player.facing = (player.lane-- === 2) ? 'left' : 'right';
 }
 
 function moveRight() {
     if (isGameOver) return;
-    if (player.lane < 2) {
-        const oldLane = player.lane++;
-        player.facing = (oldLane === 0) ? 'right' : 'left';
-    }
+    if (player.lane < 2) player.facing = (player.lane++ === 0) ? 'right' : 'left';
 }
 
 function jumpPlayer() {
-    if (isGameOver) return;
-    if (player.yOffset === 0) {
-        player.yVelocity = 650;
-    }
+    if (!isGameOver && player.yOffset === 0) player.yVelocity = 650;
 }
 
 window.addEventListener('keydown', (e) => {
@@ -286,54 +335,31 @@ window.addEventListener('keydown', (e) => {
         debugMode = !debugMode;
         fpsElem.style.display = debugMode ? 'block' : 'none';
     }
-    if (e.key === '1') {
-        showCloudLayer = !showCloudLayer;
-        cloudCanvas.style.display = showCloudLayer ? 'block' : 'none';
-    }
-    if (e.key === '2') {
-        showMainLayer = !showMainLayer;
-        canvas.style.display = showMainLayer ? 'block' : 'none';
-    }
-    if (e.key === '3') {
-        showSparkleLayer = !showSparkleLayer;
-        sparkleCanvas.style.display = showSparkleLayer ? 'block' : 'none';
-    }
+    if (e.key === '1') cloudCanvas.style.display = (showCloudLayer = !showCloudLayer) ? 'block' : 'none';
+    if (e.key === '2') canvas.style.display = (showMainLayer = !showMainLayer) ? 'block' : 'none';
+    if (e.key === '3') sparkleCanvas.style.display = (showSparkleLayer = !showSparkleLayer) ? 'block' : 'none';
 });
 
-let touchStartX = 0;
-let touchStartY = 0;
+let touchStartX = 0, touchStartY = 0;
 window.addEventListener('touchstart', (e) => {
     touchStartX = e.touches[0].clientX;
     touchStartY = e.touches[0].clientY;
 }, { passive: true });
 
 window.addEventListener('touchend', (e) => {
-    if (isGameOver) {
-        restartGame();
-        return;
-    }
+    if (isGameOver) return restartGame();
     if (e.changedTouches.length === 0) return;
     const deltaX = e.changedTouches[0].clientX - touchStartX;
     const deltaY = e.changedTouches[0].clientY - touchStartY;
-    const minSwipeDist = 30;
 
-    if (Math.abs(deltaX) > Math.abs(deltaY)) {
-        if (Math.abs(deltaX) > minSwipeDist) {
-            if (deltaX > 0) moveRight();
-            else moveLeft();
-        }
-    } else {
-        if (deltaY < -minSwipeDist) {
-            jumpPlayer();
-        }
+    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 30) {
+        deltaX > 0 ? moveRight() : moveLeft();
+    } else if (deltaY < -30) {
+        jumpPlayer();
     }
 }, { passive: true });
 
-window.addEventListener('click', () => {
-    if (isGameOver) {
-        restartGame();
-    }
-});
+window.addEventListener('click', () => { if (isGameOver) restartGame(); });
 
 const ASSETS = {
     star: Object.assign(new Image(), { src: 'assets/star.svg' }),
@@ -342,48 +368,40 @@ const ASSETS = {
     greenGate: Object.assign(new Image(), { src: 'assets/green-gate.svg' }),
     cloud: Object.assign(new Image(), { src: 'assets/cloud.svg' }),
     rainbow: Object.assign(new Image(), { src: 'assets/rainbow.svg' }),
-    unicorn: Object.assign(new Image(), { src: 'assets/unicorn.svg' })
+    unicorn: Object.assign(new Image(), { src: 'assets/unicorn.svg' }),
+    trophy: Object.assign(new Image(), { src: 'assets/trophy.svg' }),
+    heart: Object.assign(new Image(), { src: 'assets/heart.svg' })
 };
 
-const ENTITY_SPEED = 0.1; 
-const SPAWN_INTERVAL = 0.5;
-const RAINBOW_SPAWN_INTERVAL = 5.0;
-const FIXED_STAR_SIZE = 130;
-
-let spawnTimer = 0;
+const ENTITY_SPEED = 0.1, SPAWN_INTERVAL = 0.5, RAINBOW_SPAWN_INTERVAL = 5.0, FIXED_STAR_SIZE = 130;
+let spawnTimer = 0, rainbowTimer = 0;
 let nextSpawnLaneIndex = 0; 
 const spawnLaneSequence = [0, 1, 2, 1];
-let rainbowTimer = 0; 
 
-const particles = [];
-const floatingTexts = [];
+const entities = [], particles = [], floatingTexts = [];
 
 function createSpeedUpText(x, y) {
-    floatingTexts.push({
-        text: 'SPEED UP!',
-        x: x,
-        y: y,
-        vy: -90, 
-        alpha: 1.0,
-        life: 1.0,
-        decay: 1.0 
-    });
+    floatingTexts.push({ text: 'SPEED UP!', icon: null, x, y, vy: -90, alpha: 1.0, life: 1.0, decay: 1.0 });
 }
 
-function createStarBurst(x, y, count = 14, speedMult = 1) {
+function createOneUpText(x, y) {
+    floatingTexts.push({ text: '1 UP', icon: ASSETS.heart, x, y, vy: -90, alpha: 1.0, life: 1.0, decay: 1.0 });
+}
+
+function createSlowDownText(x, y) {
+    floatingTexts.push({ text: 'SLOW DOWN!', icon: null, x, y, vy: -90, alpha: 1.0, life: 1.0, decay: 1.0 });
+}
+
+function createStarBurst(x, y, count = 14, speedMult = 1, imgAsset = ASSETS.star) {
     for (let i = 0; i < count; i++) {
         const angle = (Math.PI * 2 / count) * i + (Math.random() * 0.4 - 0.2);
         const speed = (180 + Math.random() * 220) * speedMult;
         particles.push({
-            x, y,
-            vx: Math.cos(angle) * speed,
-            vy: Math.sin(angle) * speed,
-            size: (20 + Math.random() * 25) * speedMult,
-            alpha: 1.0,
-            rotation: Math.random() * Math.PI * 2,
-            vRot: (Math.random() - 0.5) * 8,
-            life: 1.0,
-            decay: (1.8 + Math.random() * 0.8) / speedMult
+            x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+            size: (20 + Math.random() * 25) * speedMult, alpha: 1.0,
+            rotation: Math.random() * Math.PI * 2, vRot: (Math.random() - 0.5) * 8,
+            life: 1.0, decay: (1.8 + Math.random() * 0.8) / speedMult,
+            img: imgAsset
         });
     }
 }
@@ -400,14 +418,7 @@ resize();
 const projection = {
     getCubeParams() {
         const w = canvas.width, h = canvas.height;
-        return {
-            size: Math.min(w, h) * 0.35,
-            zBack: 25000,
-            zFront: 150,   
-            fov: 400,
-            cx: w / 2,
-            cy: h / 2
-        };
+        return { size: Math.min(w, h) * 0.35, zBack: 25000, zFront: 150, fov: 400, cx: w / 2, cy: h / 2 };
     },
     project(ent, out = {}) {
         const p = this.getCubeParams();
@@ -423,13 +434,15 @@ const projection = {
 const getRandomFullSpanX = () => -2.5 + Math.random() * 5.0;
 const getCloudSize = () => (120 + Math.random() * 100) * (window.innerWidth < 768 ? 3.5 : 9);
 
-const entities = [];
-for (let i = 0; i < 200; i++) {
-    entities.push({ type: 'sparkle', x: getRandomFullSpanX(), yRel: Math.random(), z: Math.random(), size: 10 + Math.random() * 16, speed: ENTITY_SPEED });
+function spawnBackgroundEntities() {
+    for (let i = 0; i < 200; i++) {
+        entities.push({ type: 'sparkle', x: getRandomFullSpanX(), yRel: Math.random(), z: Math.random(), size: 10 + Math.random() * 16, speed: ENTITY_SPEED });
+    }
+    for (let i = 0; i < 100; i++) {
+        entities.push({ type: 'cloud', x: getRandomFullSpanX() * 10, yRel: 1.5 + Math.random() * 0.5, z: Math.random(), size: getCloudSize() * 1.5, speed: ENTITY_SPEED });
+    }
 }
-for (let i = 0; i < 100; i++) {
-    entities.push({ type: 'cloud', x: getRandomFullSpanX() * 10, yRel: 1.5 + Math.random() * 0.5, z: Math.random(), size: getCloudSize() * 1.5, speed: ENTITY_SPEED });
-}
+spawnBackgroundEntities();
 
 function resetEntity(ent) {
     ent.z = 0.0;
@@ -445,89 +458,75 @@ function resetEntity(ent) {
 }
 
 function getPlayerBoundingBox() {
-    const { size } = projection.getCubeParams();
-    const laneWidth = (size * 2) / 3;
-    const originPoint = projection.project({ x: 0, yRel: 0.5 + size / (size * 2), z: -5.0 }, {});
-    const laneCenterX = (-size + (player.lane * laneWidth) + laneWidth / 2) / size;
-    const frontCenter = projection.project({ x: laneCenterX, yRel: 0.5 + size / (size * 2), z: 1.0 }, {});
+    const p = projection.getCubeParams();
+    const laneWidth = (p.size * 2) / 3;
+    const originPoint = projection.project({ x: 0, yRel: 0.5 + p.size / (p.size * 2), z: -5.0 }, {});
+    const frontCenter = projection.project({ x: (-p.size + (player.lane * laneWidth) + laneWidth / 2) / p.size, yRel: 0.5 + p.size / (p.size * 2), z: 1.0 }, {});
 
     const screenY = canvas.height - 40 - player.yOffset;
     const t = (screenY - originPoint.y) / (frontCenter.y - originPoint.y);
     const screenX = originPoint.x + (frontCenter.x - originPoint.x) * t;
 
-    const h = player.size; 
+    const w = player.size * (60 / 85);
     const bobOffset = player.yOffset === 0 ? Math.sin(gameTime * 14) * 8 : 0; 
-    const w = h * (60 / 85);
 
     return {
         x: screenX - (w * 0.4),
-        y: (screenY + bobOffset - (h / 2)) - (h * 0.4),
+        y: (screenY + bobOffset - (player.size / 2)) - (player.size * 0.4),
         width: w * 0.8,
-        height: h * 0.8
+        height: player.size * 0.8
     };
 }
 
 function triggerGameOver() {
     isGameOver = true;
+
+    const currentFinalDistance = Math.floor(gameDistance);
+    const isNewRecord = currentFinalDistance > topDistanceRecord;
     
-    if (globalSpeedMultiplier > maxSpeedReached) maxSpeedReached = globalSpeedMultiplier;
-    if (Math.floor(gameDistance) > maxDistanceReached) maxDistanceReached = Math.floor(gameDistance);
-    if (collectedStars > maxStarsReached) maxStarsReached = collectedStars;
+    topDistanceRecord = Math.max(topDistanceRecord, currentFinalDistance);
+    localStorage.setItem('rainbowRunner_topDist', topDistanceRecord);
 
-    const savedTopSpeed = Math.max(parseFloat(localStorage.getItem('rainbowRunner_topSpeed') || '1.0'), maxSpeedReached);
-    const savedTopDist = Math.max(parseInt(localStorage.getItem('rainbowRunner_topDist') || '0'), maxDistanceReached);
-    const savedTopStars = Math.max(parseInt(localStorage.getItem('rainbowRunner_topStars') || '0'), maxStarsReached);
+    statDist.textContent = currentFinalDistance + ' m';
+    statTopDist.textContent = topDistanceRecord + ' m';
 
-    localStorage.setItem('rainbowRunner_topSpeed', savedTopSpeed.toFixed(2));
-    localStorage.setItem('rainbowRunner_topDist', savedTopDist);
-    localStorage.setItem('rainbowRunner_topStars', savedTopStars);
+    if (isNewRecord) {
+        distanceStatRow.style.display = 'none';
+        newRecordBanner.textContent = 'New Record Reached! Amazing Job!';
+    } else {
+        distanceStatRow.style.display = 'flex';
+        newRecordBanner.textContent = '';
+    }
 
-    statTopSpeed.textContent = savedTopSpeed.toFixed(2) + 'x';
-    statTopDist.textContent = savedTopDist + 'm';
-    statTopStars.textContent = savedTopStars;
+    const randomIndex = Math.floor(Math.random() * gameOverTitles.length);
+    gameOverTitle.textContent = gameOverTitles[randomIndex];
 
     gameOverScreen.style.display = 'flex';
 
-    let countdown = 5;
+    let countdown = 10;
     restartHint.textContent = `Restarting in ${countdown}s or click anywhere...`;
     
     const interval = setInterval(() => {
-        countdown--;
-        if (countdown > 0) {
-            restartHint.textContent = `Restarting in ${countdown}s or click anywhere...`;
-        } else {
-            clearInterval(interval);
-        }
+        if (--countdown > 0) restartHint.textContent = `Restarting in ${countdown}s or click anywhere...`;
+        else clearInterval(interval);
     }, 1000);
 
-    restartTimeout = setTimeout(() => {
-        restartGame();
-    }, 5000);
+    restartTimeout = setTimeout(restartGame, 10000);
 }
 
 function restartGame() {
     if (restartTimeout) clearTimeout(restartTimeout);
     gameOverScreen.style.display = 'none';
 
-    gameTime = 0;
-    gameDistance = 0;
-    collectedStars = 0;
-    passedRainbows = 0;
-    globalSpeedMultiplier = 1.0;
-    lives = 3;
-    isGameOver = false;
-    spawnTimer = 0;
-    rainbowTimer = 0;
-    entities.length = 0;
-    particles.length = 0;
-    floatingTexts.length = 0;
-
-    for (let i = 0; i < 200; i++) {
-        entities.push({ type: 'sparkle', x: getRandomFullSpanX(), yRel: Math.random(), z: Math.random(), size: 10 + Math.random() * 16, speed: ENTITY_SPEED });
-    }
-    for (let i = 0; i < 100; i++) {
-        entities.push({ type: 'cloud', x: getRandomFullSpanX() * 10, yRel: 1.5 + Math.random() * 0.5, z: Math.random(), size: getCloudSize() * 1.5, speed: ENTITY_SPEED });
-    }
+    topDistanceRecord = parseInt(localStorage.getItem('rainbowRunner_topDist') || '0', 10);
+    gameTime = 0; gameDistance = 0; collectedStars = 0; passedRainbows = 0; lastLifeMilestone = 0;
+    globalSpeedMultiplier = 1.0; lives = 3; isGameOver = false;
+    spawnTimer = 0; rainbowTimer = 0;
+    pendingMessages = []; messageQueueTimer = 0;
+    
+    entities.length = 0; particles.length = 0; floatingTexts.length = 0;
+    spawnBackgroundEntities();
+    updateHUDRecord();
 }
 
 function update(dt) {
@@ -536,14 +535,24 @@ function update(dt) {
     gameTime += dt;
     gameDistance += 2 * globalSpeedMultiplier * dt;
 
-    if (globalSpeedMultiplier > maxSpeedReached) maxSpeedReached = globalSpeedMultiplier;
-    if (Math.floor(gameDistance) > maxDistanceReached) maxDistanceReached = Math.floor(gameDistance);
-    if (collectedStars > maxStarsReached) maxStarsReached = collectedStars;
+    if (pendingMessages.length > 0) {
+        messageQueueTimer -= dt;
+        if (messageQueueTimer <= 0) {
+            const msg = pendingMessages.shift();
+            const p = projection.project({ x: 0, yRel: 0.5, z: 0.5 }, {});
+            if (msg.type === '1up') {
+                createOneUpText(p.x, canvas.height * 0.35);
+            } else if (msg.type === 'slowdown') {
+                createSlowDownText(p.x, canvas.height * 0.35);
+            }
+            messageQueueTimer = 0.4;
+        }
+    }
 
     if (player.yOffset > 0 || player.yVelocity !== 0) {
         player.yVelocity -= 1800 * dt;
-        player.yOffset += player.yVelocity * dt;
-        if (player.yOffset < 0) player.yOffset = player.yVelocity = 0;
+        player.yOffset = Math.max(0, player.yOffset + player.yVelocity * dt);
+        if (player.yOffset === 0) player.yVelocity = 0;
     }
 
     if (shakeDuration > 0) {
@@ -555,8 +564,7 @@ function update(dt) {
 
     const { size } = projection.getCubeParams();
     const laneWidth = (size * 2) / 3;
-    const targetLaneX = (-size + (player.lane * laneWidth) + laneWidth / 2) / size;
-    player.currentX += (targetLaneX - player.currentX) * 15 * dt;
+    player.currentX += (((-size + (player.lane * laneWidth) + laneWidth / 2) / size) - player.currentX) * 15 * dt;
 
     spawnTimer += dt;
     const currentSpawnInterval = SPAWN_INTERVAL / globalSpeedMultiplier;
@@ -595,34 +603,51 @@ function update(dt) {
         if (ent.type === 'star' && !ent.collected && ent.z >= 0.98 && ent.lane === player.lane) {
             const p = projection.project(ent, {});
             const drawSize = ent.size * p.scale;
-            const starBox = { x: p.x - drawSize * 0.4, y: p.y - drawSize * 0.4, width: drawSize * 0.8, height: drawSize * 0.8 };
-            if (playerBox.x < starBox.x + starBox.width && playerBox.x + playerBox.width > starBox.x && playerBox.y < starBox.y + starBox.height && playerBox.y + playerBox.height > starBox.y) {
+            if (playerBox.x < p.x + drawSize * 0.4 && playerBox.x + playerBox.width > p.x - drawSize * 0.4 && playerBox.y < p.y + drawSize * 0.4 && playerBox.y + playerBox.height > p.y - drawSize * 0.4) {
                 collectedStars++;
-                createStarBurst(p.x, p.y, 14, 1.0);
+                
+                // Check if this is the 100th star to double the particle count and size multiplier
+                const isHundredth = (collectedStars % 100 === 0);
+                const particleCount = isHundredth ? 28 : 14;
+                const speedMultiplier = isHundredth ? 1.8 : 1.0;
+                
+                createStarBurst(p.x, p.y, particleCount, speedMultiplier, ASSETS.star);
+
+                const currentMilestone = Math.floor(collectedStars / 100);
+                if (currentMilestone > lastLifeMilestone) {
+                    lastLifeMilestone = currentMilestone;
+                    lives++;
+                    globalSpeedMultiplier = Math.max(0.2, globalSpeedMultiplier * 0.5);
+                    
+                    pendingMessages.push({ type: '1up' });
+                    pendingMessages.push({ type: 'slowdown' });
+                }
+
                 entities.splice(i, 1);
                 continue;
             }
         }
 
-        if (ent.type === 'gate' && !ent.hit && ent.z >= 0.98) {
-            let hitCondition = (ent.gateType === 'red' && ent.lane === player.lane) || (ent.gateType === 'green' && player.yOffset < 60);
-            if (hitCondition) {
-                const p = projection.project(ent, {});
-                const drawW = ent.size * p.scale;
-                const drawH = ent.gateType === 'red' ? drawW : (ent.size * (150 / 300)) * p.scale;
-                const gateBox = { x: p.x - drawW * 0.5, y: p.y - drawH * 0.5, width: drawW, height: drawH };
+        if (ent.type === 'gate' && !ent.hit && ent.z >= 0.98 && ((ent.gateType === 'red' && ent.lane === player.lane) || (ent.gateType === 'green' && player.yOffset < 60))) {
+            const p = projection.project(ent, {});
+            const drawW = ent.size * p.scale;
+            const drawH = ent.gateType === 'red' ? drawW : (ent.size * (150 / 300)) * p.scale;
 
-                if (playerBox.x < gateBox.x + gateBox.width && playerBox.x + playerBox.width > gateBox.x && playerBox.y < gateBox.y + gateBox.height && playerBox.y + playerBox.height > gateBox.y) {
-                    lives--;
-                    triggerCameraShake(25, 0.45);
-                    createStarBurst(p.x, p.y, 45, 2.2);
-                    entities.splice(i, 1);
+            if (playerBox.x < p.x + drawW * 0.5 && playerBox.x + playerBox.width > p.x - drawW * 0.5 && playerBox.y < p.y + drawH * 0.5 && playerBox.y + playerBox.height > p.y - drawH * 0.5) {
+                lives--;
+                triggerCameraShake(25, 0.45);
+                const gateImg = ent.gateType === 'red' ? ASSETS.redGate : ASSETS.greenGate;
+                createStarBurst(p.x, p.y, 45, 2.2, gateImg);
 
-                    if (lives <= 0) {
+                if (lives < 0 && !isGameOver) {
+                    lives = 0;
+                    setTimeout(() => {
                         triggerGameOver();
-                    }
-                    continue;
+                    }, 450);
                 }
+
+                entities.splice(i, 1);
+                continue;
             }
         }
 
@@ -630,30 +655,15 @@ function update(dt) {
             ent.passed = true;
             passedRainbows++;
             globalSpeedMultiplier *= 1.05;
-            
-            const centerLaneXIndex = 1;
-            const centerLaneCenterX = (-size + (centerLaneXIndex * laneWidth) + laneWidth / 2) / size;
-            const frontCenterPoint = projection.project({ x: centerLaneCenterX, yRel: 0.5 + size / (size * 2), z: 1.0 }, {});
-            
-            createSpeedUpText(frontCenterPoint.x, canvas.height * 0.35);
+            createSpeedUpText(projection.project({ x: (-size + laneWidth + laneWidth / 2) / size, yRel: 0.5 + size / (size * 2), z: 1.0 }, {}).x, canvas.height * 0.35);
         }
 
         if (ent.z >= 0) {
             const p = projection.project(ent, {});
-            let isOffScreen = false;
+            const drawSize = (ent.type === 'rainbow' ? 1400 : ent.size) * p.scale;
+            const yExt = ent.type === 'cloud' ? drawSize * 0.25 : drawSize * 0.5;
 
-            if (['star', 'gate', 'rainbow'].includes(ent.type)) {
-                const drawSize = (ent.type === 'rainbow' ? 1400 : ent.size) * p.scale;
-                const top = p.y - drawSize * 0.5, bottom = p.y + drawSize * 0.5, left = p.x - drawSize * 0.5, right = p.x + drawSize * 0.5;
-                isOffScreen = ent.z >= 1.0 || top > canvas.height + 100 || bottom < -100 || right < -100 || left > canvas.width + 100;
-            } else {
-                const drawSize = ent.size * p.scale;
-                const top = p.y - (ent.type === 'cloud' ? drawSize * 0.25 : drawSize * 0.5);
-                const bottom = p.y + (ent.type === 'cloud' ? drawSize * 0.25 : drawSize * 0.5);
-                isOffScreen = top > canvas.height || bottom < 0 || p.x - drawSize * 0.5 > canvas.width || p.x + drawSize * 0.5 < 0 || ent.z >= 1.0;
-            }
-
-            if (isOffScreen) {
+            if (ent.z >= 1.0 || p.y - yExt > canvas.height + 100 || p.y + yExt < -100 || p.x + drawSize * 0.5 < -100 || p.x - drawSize * 0.5 > canvas.width + 100) {
                 if (['star', 'gate', 'rainbow'].includes(ent.type)) entities.splice(i, 1);
                 else resetEntity(ent);
             }
@@ -662,27 +672,26 @@ function update(dt) {
 
     for (let i = particles.length - 1; i >= 0; i--) {
         const p = particles[i];
-        p.x += p.vx * dt;
-        p.y += p.vy * dt;
-        p.rotation += p.vRot * dt;
-        p.life -= p.decay * dt;
+        p.x += p.vx * dt; p.y += p.vy * dt;
+        p.rotation += p.vRot * dt; p.life -= p.decay * dt;
         p.alpha = Math.max(0, p.life);
         if (p.life <= 0) particles.splice(i, 1);
     }
 
     for (let i = floatingTexts.length - 1; i >= 0; i--) {
         const ft = floatingTexts[i];
-        ft.y += ft.vy * dt;
-        ft.life -= ft.decay * dt;
+        ft.y += ft.vy * dt; ft.life -= ft.decay * dt;
         ft.alpha = Math.max(0, ft.life);
         if (ft.life <= 0) floatingTexts.splice(i, 1);
     }
 
     hudStarsElem.textContent = collectedStars;
     hudDistElem.textContent = Math.floor(gameDistance);
-    hudRainbowsElem.textContent = passedRainbows;
     hudLivesElem.textContent = lives;
+    updateHUDRecord();
 }
+
+const hexToRgba = (hex, alpha) => `rgba(${parseInt(hex.slice(1,3),16)},${parseInt(hex.slice(3,5),16)},${parseInt(hex.slice(5,7),16)},${alpha})`;
 
 function renderLanes() {
     const { size } = projection.getCubeParams();
@@ -699,8 +708,6 @@ function renderLanes() {
         const extLeft = frontLeft.y >= canvas.height ? frontLeft : { x: originPoint.x + (frontLeft.x - originPoint.x) * ((canvas.height - originPoint.y) / (frontLeft.y - originPoint.y)), y: canvas.height };
 
         const grad = ctx.createLinearGradient(originPoint.x, originPoint.y, (frontLeft.x + frontRight.x) / 2, (frontLeft.y + frontRight.y) / 2);
-        const hexToRgba = (hex, alpha) => `rgba(${parseInt(hex.slice(1,3),16)},${parseInt(hex.slice(3,5),16)},${parseInt(hex.slice(5,7),16)},${alpha})`;
-        
         grad.addColorStop(0.0, hexToRgba(baseConfigs[i][0], 0));
         grad.addColorStop(0.1, hexToRgba(baseConfigs[i][0], 1));
         grad.addColorStop(0.5, baseConfigs[i][1]);
@@ -721,104 +728,88 @@ function renderPlayer() {
     const { size } = projection.getCubeParams();
     const laneWidth = (size * 2) / 3;
     const originPoint = projection.project({ x: 0, yRel: 0.5 + size / (size * 2), z: -5.0 }, {});
-    const laneCenterX = (-size + (player.lane * laneWidth) + laneWidth / 2) / size;
-    const frontCenter = projection.project({ x: laneCenterX, yRel: 0.5 + size / (size * 2), z: 1.0 }, {});
+    const frontCenter = projection.project({ x: (-size + (player.lane * laneWidth) + laneWidth / 2) / size, yRel: 0.5 + size / (size * 2), z: 1.0 }, {});
 
     const screenY = canvas.height - 40 - player.yOffset;
     const screenX = originPoint.x + (frontCenter.x - originPoint.x) * ((screenY - originPoint.y) / (frontCenter.y - originPoint.y));
-    const h = player.size;
-    const w = h * (60 / 85);
+    const h = player.size, w = h * (60 / 85);
 
     ctx.save();
     ctx.translate(screenX, screenY + (player.yOffset === 0 ? Math.sin(gameTime * 14 * Math.sqrt(globalSpeedMultiplier)) * 8 : 0));
     ctx.rotate(Math.sin(gameTime * 7) * 0.03);
     if (player.facing === 'left') ctx.scale(-1, 1);
 
-    if (ASSETS.unicorn.complete && ASSETS.unicorn.naturalWidth !== 0) {
-        ctx.drawImage(ASSETS.unicorn, -w / 2, -h, w, h);
-    } else {
-        ctx.fillStyle = '#ff006e';
-        ctx.beginPath();
-        ctx.arc(0, -h / 2, h / 4, 0, Math.PI * 2);
-        ctx.fill();
-    }
+    if (ASSETS.unicorn.complete && ASSETS.unicorn.naturalWidth !== 0) ctx.drawImage(ASSETS.unicorn, -w / 2, -h, w, h);
+    else { ctx.fillStyle = '#ff006e'; ctx.beginPath(); ctx.arc(0, -h / 2, h / 4, 0, Math.PI * 2); ctx.fill(); }
 
-    if (debugMode) {
-        ctx.strokeStyle = '#00ffcc';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(-w / 2, -h, w, h);
-    }
+    if (debugMode) { ctx.strokeStyle = '#00ffcc'; ctx.lineWidth = 2; ctx.strokeRect(-w / 2, -h, w, h); }
     ctx.restore();
 }
 
 function renderParticles() {
-    if (!showSparkleLayer || !ASSETS.star.complete || !ASSETS.star.naturalWidth) return;
     particles.forEach(p => {
+        const particleImg = p.img || ASSETS.star;
+        if (!showSparkleLayer || !particleImg.complete || !particleImg.naturalWidth) return;
         sparkleCtx.save();
         sparkleCtx.globalAlpha = p.alpha;
         sparkleCtx.translate(p.x, p.y);
         sparkleCtx.rotate(p.rotation);
-        sparkleCtx.drawImage(ASSETS.star, -p.size * p.life / 2, -p.size * p.life / 2, p.size * p.life, p.size * p.life);
+        sparkleCtx.drawImage(particleImg, -p.size * p.life / 2, -p.size * p.life / 2, p.size * p.life, p.size * p.life);
         sparkleCtx.restore();
     });
 }
 
 function renderFloatingTexts() {
     if (floatingTexts.length === 0) return;
-
     ctx.save();
     ctx.font = '900 42px "Segoe UI", Tahoma, Geneva, Verdana, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
 
     floatingTexts.forEach(ft => {
         ctx.save();
         ctx.globalAlpha = ft.alpha;
         
-        const textMetrics = ctx.measureText(ft.text);
-        const boxWidth = textMetrics.width + 50;
-        const boxHeight = 60;
-        const boxX = ft.x - boxWidth / 2;
-        const boxY = ft.y - boxHeight / 2;
-        const radius = 30;
+        let textWidth = ctx.measureText(ft.text).width;
+        let iconSize = ft.icon ? 40 : 0;
+        let spacing = ft.icon ? 12 : 0;
+        let boxWidth = textWidth + iconSize + spacing + 50;
+        let boxX = ft.x - boxWidth / 2, boxY = ft.y - 30;
 
         ctx.fillStyle = 'rgba(255, 255, 255, 0.92)';
         ctx.strokeStyle = 'rgba(255, 182, 215, 0.8)';
         ctx.lineWidth = 4;
+        ctx.beginPath(); ctx.roundRect(boxX, boxY, boxWidth, 60, 30);
+        ctx.fill(); ctx.stroke();
 
-        ctx.beginPath();
-        ctx.roundRect(boxX, boxY, boxWidth, boxHeight, radius);
-        ctx.fill();
-        ctx.stroke();
+        ctx.shadowColor = 'rgba(255, 255, 255, 0.9)'; ctx.shadowBlur = 16;
+        ctx.fillStyle = '#ff006e'; ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 4; ctx.lineJoin = 'round';
 
-        ctx.shadowColor = 'rgba(255, 255, 255, 0.9)';
-        ctx.shadowBlur = 16;
-        ctx.shadowOffsetX = 0;
-        ctx.shadowOffsetY = 0;
+        if (ft.icon && ft.icon.complete && ft.icon.naturalWidth !== 0) {
+            let startX = ft.x - boxWidth / 2 + 25;
+            ctx.drawImage(ft.icon, startX, ft.y - 20, 40, 40);
+            let textDrawX = startX + 40 + spacing + textWidth / 2;
+            ctx.strokeText(ft.text, textDrawX, ft.y); ctx.fillText(ft.text, textDrawX, ft.y);
+        } else {
+            ctx.strokeText(ft.text, ft.x, ft.y); ctx.fillText(ft.text, ft.x, ft.y);
+        }
 
-        ctx.fillStyle = '#ff006e';
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 4;
-        ctx.lineJoin = 'round';
-
-        ctx.strokeText(ft.text, ft.x, ft.y);
-        ctx.fillText(ft.text, ft.x, ft.y);
         ctx.restore();
     });
-
     ctx.restore();
 }
 
 function render() {
-    [cloudCtx, ctx, sparkleCtx].forEach((c, idx) => c.clearRect(0, 0, [cloudCanvas, canvas, sparkleCanvas][idx].width, [cloudCanvas, canvas, sparkleCanvas][idx].height));
+    const contexts = [cloudCtx, ctx, sparkleCtx];
+    const canvases = [cloudCanvas, canvas, sparkleCanvas];
 
-    [cloudCtx, ctx, sparkleCtx].forEach(c => {
+    contexts.forEach((c, i) => {
+        c.clearRect(0, 0, canvases[i].width, canvases[i].height);
         c.save();
         c.translate(shakeOffsetX, shakeOffsetY);
     });
 
     renderLanes();
-
     entities.sort((a, b) => projection.project(b, {}).currentZ - projection.project(a, {}).currentZ);
 
     entities.forEach(ent => {
@@ -826,23 +817,14 @@ function render() {
         const p = projection.project(ent, {});
         const targetCtx = ent.type === 'cloud' ? cloudCtx : (ent.type === 'sparkle' ? sparkleCtx : ctx);
 
-        let bw = 0, bh = 0;
-        if (ent.type === 'rainbow') { bw = 1400 * p.scale; bh = 800 * p.scale; }
-        else if (ent.type === 'gate') {
-            bw = ent.size * p.scale;
-            bh = ent.gateType === 'red' ? bw : (ent.size * (150 / 300)) * p.scale;
-        } else {
-            bw = ent.size * p.scale;
-            bh = ent.type === 'cloud' ? bw * 0.5 : bw;
-        }
-
+        let bw = (ent.type === 'rainbow') ? 1400 * p.scale : ent.size * p.scale;
+        let bh = (ent.type === 'rainbow') ? 800 * p.scale : (ent.type === 'cloud' ? bw * 0.5 : (ent.type === 'gate' && ent.gateType === 'green' ? (ent.size * 0.5) * p.scale : bw));
+        
         const bx = p.x - bw / 2, by = p.y - bh / 2;
-
         targetCtx.save();
-        if (['cloud', 'rainbow'].includes(ent.type)) targetCtx.globalAlpha = Math.min(1.0, Math.max(0.0, ent.z));
-
-        let img = ASSETS[ent.type];
-        if (ent.type === 'gate') img = ent.gateType === 'red' ? ASSETS.redGate : ASSETS.greenGate;
+        
+        if (['cloud', 'rainbow'].includes(ent.type)) targetCtx.globalAlpha = Math.max(0.0, Math.min(1.0, ent.z));
+        let img = ASSETS[ent.type] || (ent.gateType === 'red' ? ASSETS.redGate : ASSETS.greenGate);
 
         if (img && img.complete && img.naturalWidth !== 0) {
             targetCtx.drawImage(img, bx, by, bw, bh);
@@ -852,28 +834,24 @@ function render() {
             targetCtx.ellipse(p.x, p.y, bw / 2, bh / 2, 0, 0, Math.PI * 2);
             targetCtx.fill();
         }
-        targetCtx.restore();
-
+        
         if (debugMode) {
             targetCtx.strokeStyle = ent.type === 'sparkle' ? '#00ffcc' : (ent.type === 'cloud' ? '#ffaa00' : (ent.type === 'gate' ? (ent.gateType === 'red' ? '#ff0000' : '#00ff00') : '#ff00ff'));
-            targetCtx.lineWidth = 1;
             targetCtx.strokeRect(bx, by, bw, bh);
         }
+        targetCtx.restore();
     });
 
-    renderPlayer();
-    renderParticles();
-    renderFloatingTexts();
+    renderPlayer(); renderParticles(); renderFloatingTexts();
 
     if (debugMode) {
         const pBox = getPlayerBoundingBox();
-        ctx.strokeStyle = '#ffff00';
-        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#ffff00'; ctx.lineWidth = 2;
         ctx.strokeRect(pBox.x, pBox.y, pBox.width, pBox.height);
         fpsElem.textContent = `FPS: 60 | Speed: ${globalSpeedMultiplier.toFixed(2)}x | Entities: ${entities.length} | Dist: ${Math.floor(gameDistance)}m | Stars: ${collectedStars} | Rainbows: ${passedRainbows}`;
     }
 
-    [cloudCtx, ctx, sparkleCtx].forEach(c => c.restore());
+    contexts.forEach(c => c.restore());
 }
 
 let lastTime = 0, isTabPaused = false;
@@ -891,7 +869,7 @@ function gameLoop(timestamp) {
         update(dt);
         render();
     } else if (isGameOver) {
-        render(); // Keep rendering the background scene behind the overlay
+        render();
     }
     requestAnimationFrame(gameLoop);
 }
