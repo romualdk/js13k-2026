@@ -572,18 +572,31 @@ function update(dt) {
         spawnTimer -= currentSpawnInterval;
         const laneIndex = spawnLaneSequence[nextSpawnLaneIndex];
         nextSpawnLaneIndex = (nextSpawnLaneIndex + 1) % spawnLaneSequence.length;
-        const standardYRel = 0.5 + size / (size * 2);
-        const randRoll = Math.random();
+        
+        const { size } = projection.getCubeParams();
+        const laneWidth = (size * 2) / 3;
         const laneCenterX = (-size + (laneIndex * laneWidth) + laneWidth / 2) / size;
+        const randRoll = Math.random();
+        
+        // 1. Make sizes responsive to the lane width
+        const starSize = laneWidth * 0.6;
+        const redGateSize = laneWidth * 0.75; 
+        const greenGateSize = size * 2;
+        
+        // 2. Calculate exact yRel so the bottom sits perfectly on the track (yRel = 1.0)
+        // Formula: yRel = 1.0 - (actualHeight / (4 * size))
+        const starYRel = 1.0 - (starSize / (4 * size));
+        const redGateYRel = 1.0 - (redGateSize / (4 * size));
+        const greenGateYRel = 1.0 - ((greenGateSize * 0.5) / (4 * size)); // Green gate height is 50% of its size
 
         if (randRoll < 0.67) {
-            entities.push({ type: 'star', lane: laneIndex, x: laneCenterX, yRel: standardYRel - 0.08, z: 0.0, size: FIXED_STAR_SIZE, speed: ENTITY_SPEED, collected: false });
+            entities.push({ type: 'star', lane: laneIndex, x: laneCenterX, yRel: starYRel, z: 0.0, size: starSize, speed: ENTITY_SPEED, collected: false });
             lastSpawnedGateType = null;
         } else if (randRoll < 0.92 || lastSpawnedGateType === 'green') {
-            entities.push({ type: 'gate', gateType: 'red', lane: laneIndex, x: laneCenterX, yRel: standardYRel - 0.05, z: 0.0, size: 140, speed: ENTITY_SPEED, hit: false });
+            entities.push({ type: 'gate', gateType: 'red', lane: laneIndex, x: laneCenterX, yRel: redGateYRel, z: 0.0, size: redGateSize, speed: ENTITY_SPEED, hit: false });
             lastSpawnedGateType = 'red';
         } else {
-            entities.push({ type: 'gate', gateType: 'green', lane: -1, x: 0, yRel: standardYRel - 0.05, z: 0.0, size: size * 2, speed: ENTITY_SPEED, hit: false });
+            entities.push({ type: 'gate', gateType: 'green', lane: -1, x: 0, yRel: greenGateYRel, z: 0.0, size: greenGateSize, speed: ENTITY_SPEED, hit: false });
             lastSpawnedGateType = 'green';
         }
     }
