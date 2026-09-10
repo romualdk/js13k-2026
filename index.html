@@ -296,15 +296,34 @@ const objectiveMessages = [
     "Catch 100 stars to tame the rush!"
 ];
 
+const ASSETS = {
+    star: Object.assign(new Image(), { src: 'assets/star.svg' }),
+    sparkle: Object.assign(new Image(), { src: 'assets/sparkle.svg' }),
+    redGate: Object.assign(new Image(), { src: 'assets/red-gate.svg' }),
+    greenGate: Object.assign(new Image(), { src: 'assets/green-gate.svg' }),
+    cloud: Object.assign(new Image(), { src: 'assets/cloud.svg' }),
+    rainbow: Object.assign(new Image(), { src: 'assets/rainbow.svg' }),
+    unicorn: Object.assign(new Image(), { src: 'assets/unicorn.svg' }),
+    trophy: Object.assign(new Image(), { src: 'assets/trophy.svg' }),
+    heart: Object.assign(new Image(), { src: 'assets/heart.svg' })
+};
+
+const ENTITY_SPEED = 0.1, SPAWN_INTERVAL = 0.5, RAINBOW_SPAWN_INTERVAL = 5.0;
+const spawnLaneSequence = [0, 1, 2, 1];
+
 let gameTime = 0, gameDistance = 0, collectedStars = 0, passedRainbows = 0, lastLifeMilestone = 0;
-let globalSpeedMultiplier = 1.0, lastSpawnedGateType = null, lives = 3;
+let globalSpeedMultiplier = 1.0, lives = 3;
 let isGameOver = false, restartTimeout = null;
 let topDistanceRecord = parseInt(localStorage.getItem('rainbowRunner_topDist') || '0', 10);
 
 let shakeDuration = 0, shakeIntensity = 0, shakeOffsetX = 0, shakeOffsetY = 0;
+let pendingMessages = [], messageQueueTimer = 0;
+let spawnTimer = 0, rainbowTimer = 0, nextSpawnLaneIndex = 0;
 
-let pendingMessages = [];
-let messageQueueTimer = 0;
+let debugMode = false, showCloudLayer = true, showMainLayer = true, showSparkleLayer = true;
+
+const player = { lane: 1, currentX: 0, size: 220, facing: 'right', yOffset: 0, yVelocity: 0 };
+const entities = [], particles = [], floatingTexts = [];
 
 function updateHUDRecord() {
     hudBestElem.textContent = Math.max(topDistanceRecord, Math.floor(gameDistance));
@@ -315,10 +334,6 @@ function triggerCameraShake(intensity = 20, duration = 0.4) {
     shakeIntensity = intensity;
     shakeDuration = duration;
 }
-
-const player = { lane: 1, currentX: 0, size: 220, facing: 'right', yOffset: 0, yVelocity: 0 };
-
-let debugMode = false, showCloudLayer = true, showMainLayer = true, showSparkleLayer = true;
 
 function moveLeft() {
     if (isGameOver) return;
@@ -369,41 +384,15 @@ window.addEventListener('touchend', (e) => {
 
 window.addEventListener('click', () => { if (isGameOver) restartGame(); });
 
-const ASSETS = {
-    star: Object.assign(new Image(), { src: 'assets/star.svg' }),
-    sparkle: Object.assign(new Image(), { src: 'assets/sparkle.svg' }),
-    redGate: Object.assign(new Image(), { src: 'assets/red-gate.svg' }),
-    greenGate: Object.assign(new Image(), { src: 'assets/green-gate.svg' }),
-    cloud: Object.assign(new Image(), { src: 'assets/cloud.svg' }),
-    rainbow: Object.assign(new Image(), { src: 'assets/rainbow.svg' }),
-    unicorn: Object.assign(new Image(), { src: 'assets/unicorn.svg' }),
-    trophy: Object.assign(new Image(), { src: 'assets/trophy.svg' }),
-    heart: Object.assign(new Image(), { src: 'assets/heart.svg' })
-};
-
-const ENTITY_SPEED = 0.1, SPAWN_INTERVAL = 0.5, RAINBOW_SPAWN_INTERVAL = 5.0, FIXED_STAR_SIZE = 130;
-let spawnTimer = 0, rainbowTimer = 0;
-let nextSpawnLaneIndex = 0; 
-const spawnLaneSequence = [0, 1, 2, 1];
-
-const entities = [], particles = [], floatingTexts = [];
-
-function createSpeedUpText(x, y) {
-    floatingTexts.push({ text: 'SPEED UP!', icon: null, iconEnd: null, x, y, vy: -90, alpha: 1.0, life: 1.0, decay: 1.0 });
+function createFloatingText(text, icon = null, life = 1.0) {
+    const p = projection.project({ x: 0, yRel: 0.5, z: 0.5 });
+    floatingTexts.push({ text, icon, x: p.x, y: canvas.height * 0.35, alpha: 1.0, life });
 }
 
-function createOneUpText(x, y) {
-    floatingTexts.push({ text: '1 UP', icon: ASSETS.heart, iconEnd: null, x, y, vy: -90, alpha: 1.0, life: 1.0, decay: 1.0 });
-}
-
-function createSlowDownText(x, y) {
-    floatingTexts.push({ text: 'SLOW DOWN!', icon: null, iconEnd: null, x, y, vy: -90, alpha: 1.0, life: 1.0, decay: 1.0 });
-}
-
-function createObjectiveText(x, y) {
+function createObjectiveText() {
     const randomMsg = objectiveMessages[Math.floor(Math.random() * objectiveMessages.length)];
-    // Removed icon and iconEnd so it fits nicely on narrow screens
-    floatingTexts.push({ text: randomMsg, icon: null, iconEnd: null, x, y, vy: -90, alpha: 1.0, life: 1.5, decay: 0.6 });
+    const p = projection.project({ x: 0, yRel: 0.5, z: 0.5 });
+    floatingTexts.push({ text: randomMsg, icon: null, x: p.x, y: canvas.height * 0.50, alpha: 1.0, life: 1.5 });
 }
 
 function createStarBurst(x, y, count = 14, speedMult = 1, imgAsset = ASSETS.star) {
@@ -474,8 +463,8 @@ function resetEntity(ent) {
 function getPlayerBoundingBox() {
     const p = projection.getCubeParams();
     const laneWidth = (p.size * 2) / 3;
-    const originPoint = projection.project({ x: 0, yRel: 0.5 + p.size / (p.size * 2), z: -5.0 }, {});
-    const frontCenter = projection.project({ x: (-p.size + (player.lane * laneWidth) + laneWidth / 2) / p.size, yRel: 0.5 + p.size / (p.size * 2), z: 1.0 }, {});
+    const originPoint = projection.project({ x: 0, yRel: 0.5 + p.size / (p.size * 2), z: -5.0 });
+    const frontCenter = projection.project({ x: (-p.size + (player.lane * laneWidth) + laneWidth / 2) / p.size, yRel: 0.5 + p.size / (p.size * 2), z: 1.0 });
 
     const screenY = canvas.height - 40 - player.yOffset;
     const t = (screenY - originPoint.y) / (frontCenter.y - originPoint.y);
@@ -512,9 +501,7 @@ function triggerGameOver() {
         newRecordBanner.textContent = '';
     }
 
-    const randomIndex = Math.floor(Math.random() * gameOverTitles.length);
-    gameOverTitle.textContent = gameOverTitles[randomIndex];
-
+    gameOverTitle.textContent = gameOverTitles[Math.floor(Math.random() * gameOverTitles.length)];
     gameOverScreen.style.display = 'flex';
 
     let countdown = 10;
@@ -542,8 +529,7 @@ function restartGame() {
     spawnBackgroundEntities();
     updateHUDRecord();
 
-    const p = projection.project({ x: 0, yRel: 0.5, z: 0.5 }, {});
-    createObjectiveText(p.x, canvas.height * 0.50);
+    createObjectiveText();
 }
 
 function update(dt) {
@@ -556,12 +542,8 @@ function update(dt) {
         messageQueueTimer -= dt;
         if (messageQueueTimer <= 0) {
             const msg = pendingMessages.shift();
-            const p = projection.project({ x: 0, yRel: 0.5, z: 0.5 }, {});
-            if (msg.type === '1up') {
-                createOneUpText(p.x, canvas.height * 0.35);
-            } else if (msg.type === 'slowdown') {
-                createSlowDownText(p.x, canvas.height * 0.35);
-            }
+            if (msg === '1up') createFloatingText('1 UP', ASSETS.heart);
+            else if (msg === 'slowdown') createFloatingText('SLOW DOWN!');
             messageQueueTimer = 0.4;
         }
     }
@@ -590,28 +572,19 @@ function update(dt) {
         const laneIndex = spawnLaneSequence[nextSpawnLaneIndex];
         nextSpawnLaneIndex = (nextSpawnLaneIndex + 1) % spawnLaneSequence.length;
         
-        const { size } = projection.getCubeParams();
-        const laneWidth = (size * 2) / 3;
         const laneCenterX = (-size + (laneIndex * laneWidth) + laneWidth / 2) / size;
         const randRoll = Math.random();
         
         const starSize = laneWidth * 0.6;
         const redGateSize = laneWidth * 0.75; 
         const greenGateSize = size * 2;
-        
-        const starYRel = 1.0 - (starSize / (4 * size));
-        const redGateYRel = 1.0 - (redGateSize / (4 * size));
-        const greenGateYRel = 1.0 - ((greenGateSize * 0.5) / (4 * size));
 
         if (randRoll < 0.67) {
-            entities.push({ type: 'star', lane: laneIndex, x: laneCenterX, yRel: starYRel, z: 0.0, size: starSize, speed: ENTITY_SPEED, collected: false });
-            lastSpawnedGateType = null;
-        } else if (randRoll < 0.92 || lastSpawnedGateType === 'green') {
-            entities.push({ type: 'gate', gateType: 'red', lane: laneIndex, x: laneCenterX, yRel: redGateYRel, z: 0.0, size: redGateSize, speed: ENTITY_SPEED, hit: false });
-            lastSpawnedGateType = 'red';
+            entities.push({ type: 'star', lane: laneIndex, x: laneCenterX, yRel: 1.0 - (starSize / (4 * size)), z: 0.0, size: starSize, speed: ENTITY_SPEED });
+        } else if (randRoll < 0.92) {
+            entities.push({ type: 'gate', gateType: 'red', lane: laneIndex, x: laneCenterX, yRel: 1.0 - (redGateSize / (4 * size)), z: 0.0, size: redGateSize, speed: ENTITY_SPEED });
         } else {
-            entities.push({ type: 'gate', gateType: 'green', lane: -1, x: 0, yRel: greenGateYRel, z: 0.0, size: greenGateSize, speed: ENTITY_SPEED, hit: false });
-            lastSpawnedGateType = 'green';
+            entities.push({ type: 'gate', gateType: 'green', lane: -1, x: 0, yRel: 1.0 - ((greenGateSize * 0.5) / (4 * size)), z: 0.0, size: greenGateSize, speed: ENTITY_SPEED });
         }
     }
 
@@ -627,26 +600,21 @@ function update(dt) {
         const ent = entities[i];
         ent.z += ent.speed * globalSpeedMultiplier * dt;
 
-        if (ent.type === 'star' && !ent.collected && ent.z >= 0.98 && ent.lane === player.lane) {
-            const p = projection.project(ent, {});
+        if (ent.type === 'star' && ent.z >= 0.98 && ent.lane === player.lane) {
+            const p = projection.project(ent);
             const drawSize = ent.size * p.scale;
             if (playerBox.x < p.x + drawSize * 0.4 && playerBox.x + playerBox.width > p.x - drawSize * 0.4 && playerBox.y < p.y + drawSize * 0.4 && playerBox.y + playerBox.height > p.y - drawSize * 0.4) {
                 collectedStars++;
                 
                 const isHundredth = (collectedStars % 100 === 0);
-                const particleCount = isHundredth ? 28 : 14;
-                const speedMultiplier = isHundredth ? 1.8 : 1.0;
-                
-                createStarBurst(p.x, p.y, particleCount, speedMultiplier, ASSETS.star);
+                createStarBurst(p.x, p.y, isHundredth ? 28 : 14, isHundredth ? 1.8 : 1.0);
 
                 const currentMilestone = Math.floor(collectedStars / 100);
                 if (currentMilestone > lastLifeMilestone) {
                     lastLifeMilestone = currentMilestone;
                     lives++;
                     globalSpeedMultiplier = Math.max(0.2, globalSpeedMultiplier * 0.5);
-                    
-                    pendingMessages.push({ type: '1up' });
-                    pendingMessages.push({ type: 'slowdown' });
+                    pendingMessages.push('1up', 'slowdown');
                 }
 
                 entities.splice(i, 1);
@@ -654,22 +622,19 @@ function update(dt) {
             }
         }
 
-        if (ent.type === 'gate' && !ent.hit && ent.z >= 0.98 && ((ent.gateType === 'red' && ent.lane === player.lane) || (ent.gateType === 'green' && player.yOffset < 60))) {
-            const p = projection.project(ent, {});
+        if (ent.type === 'gate' && ent.z >= 0.98 && ((ent.gateType === 'red' && ent.lane === player.lane) || (ent.gateType === 'green' && player.yOffset < 60))) {
+            const p = projection.project(ent);
             const drawW = ent.size * p.scale;
-            const drawH = ent.gateType === 'red' ? drawW : (ent.size * (150 / 300)) * p.scale;
+            const drawH = ent.gateType === 'red' ? drawW : (ent.size * 0.5) * p.scale;
 
             if (playerBox.x < p.x + drawW * 0.5 && playerBox.x + playerBox.width > p.x - drawW * 0.5 && playerBox.y < p.y + drawH * 0.5 && playerBox.y + playerBox.height > p.y - drawH * 0.5) {
                 lives--;
                 triggerCameraShake(25, 0.45);
-                const gateImg = ent.gateType === 'red' ? ASSETS.redGate : ASSETS.greenGate;
-                createStarBurst(p.x, p.y, 45, 2.2, gateImg);
+                createStarBurst(p.x, p.y, 45, 2.2, ent.gateType === 'red' ? ASSETS.redGate : ASSETS.greenGate);
 
                 if (lives < 0 && !isGameOver) {
                     lives = 0;
-                    setTimeout(() => {
-                        triggerGameOver();
-                    }, 450);
+                    setTimeout(triggerGameOver, 450);
                 }
 
                 entities.splice(i, 1);
@@ -681,11 +646,11 @@ function update(dt) {
             ent.passed = true;
             passedRainbows++;
             globalSpeedMultiplier *= 1.05;
-            createSpeedUpText(projection.project({ x: (-size + laneWidth + laneWidth / 2) / size, yRel: 0.5 + size / (size * 2), z: 1.0 }, {}).x, canvas.height * 0.35);
+            createFloatingText('SPEED UP!');
         }
 
         if (ent.z >= 0) {
-            const p = projection.project(ent, {});
+            const p = projection.project(ent);
             const drawSize = (ent.type === 'rainbow' ? 1400 : ent.size) * p.scale;
             const yExt = ent.type === 'cloud' ? drawSize * 0.25 : drawSize * 0.5;
 
@@ -706,7 +671,7 @@ function update(dt) {
 
     for (let i = floatingTexts.length - 1; i >= 0; i--) {
         const ft = floatingTexts[i];
-        ft.y += ft.vy * dt; ft.life -= ft.decay * dt;
+        ft.y -= 90 * dt; ft.life -= dt;
         ft.alpha = Math.max(0, ft.life);
         if (ft.life <= 0) floatingTexts.splice(i, 1);
     }
@@ -722,13 +687,13 @@ const hexToRgba = (hex, alpha) => `rgba(${parseInt(hex.slice(1,3),16)},${parseIn
 function renderLanes() {
     const { size } = projection.getCubeParams();
     const laneWidth = (size * 2) / 3;
-    const originPoint = projection.project({ x: 0, yRel: 0.5 + size / (size * 2), z: -5.0 }, {});
+    const originPoint = projection.project({ x: 0, yRel: 0.5 + size / (size * 2), z: -5.0 });
     const baseConfigs = [['#ffbe0b', '#fb5607'], ['#3a86ff', '#8338ec'], ['#ff006e', '#90003a']];
 
     for (let i = 0; i < 3; i++) {
         const xStart = -size + (i * laneWidth);
-        const frontRight = projection.project({ x: (xStart + laneWidth) / size, yRel: 0.5 + size / (size * 2), z: 1.0 }, {});
-        const frontLeft = projection.project({ x: xStart / size, yRel: 0.5 + size / (size * 2), z: 1.0 }, {});
+        const frontRight = projection.project({ x: (xStart + laneWidth) / size, yRel: 0.5 + size / (size * 2), z: 1.0 });
+        const frontLeft = projection.project({ x: xStart / size, yRel: 0.5 + size / (size * 2), z: 1.0 });
 
         const extRight = frontRight.y >= canvas.height ? frontRight : { x: originPoint.x + (frontRight.x - originPoint.x) * ((canvas.height - originPoint.y) / (frontRight.y - originPoint.y)), y: canvas.height };
         const extLeft = frontLeft.y >= canvas.height ? frontLeft : { x: originPoint.x + (frontLeft.x - originPoint.x) * ((canvas.height - originPoint.y) / (frontLeft.y - originPoint.y)), y: canvas.height };
@@ -753,8 +718,8 @@ function renderLanes() {
 function renderPlayer() {
     const { size } = projection.getCubeParams();
     const laneWidth = (size * 2) / 3;
-    const originPoint = projection.project({ x: 0, yRel: 0.5 + size / (size * 2), z: -5.0 }, {});
-    const frontCenter = projection.project({ x: (-size + (player.lane * laneWidth) + laneWidth / 2) / size, yRel: 0.5 + size / (size * 2), z: 1.0 }, {});
+    const originPoint = projection.project({ x: 0, yRel: 0.5 + size / (size * 2), z: -5.0 });
+    const frontCenter = projection.project({ x: (-size + (player.lane * laneWidth) + laneWidth / 2) / size, yRel: 0.5 + size / (size * 2), z: 1.0 });
 
     const screenY = canvas.height - 40 - player.yOffset;
     const screenX = originPoint.x + (frontCenter.x - originPoint.x) * ((screenY - originPoint.y) / (frontCenter.y - originPoint.y));
@@ -800,18 +765,13 @@ function renderFloatingTexts() {
 
         const iconSize = dynamicFontSize * 0.95;
         const spacing = dynamicFontSize * 0.3;
-        const padX = dynamicFontSize * 1.2;
-        // Balanced vertical padding so spacing above and below text is the same
-        const padY = dynamicFontSize * 0.65;
+        const padX = dynamicFontSize * 1.2, padY = dynamicFontSize * 0.65;
 
         let hasStart = ft.icon && ft.icon.complete && ft.icon.naturalWidth !== 0;
-        let hasEnd = ft.iconEnd && ft.iconEnd.naturalWidth !== 0;
-        const iconReservedWidth = (hasStart ? iconSize + spacing : 0) + (hasEnd ? iconSize + spacing : 0);
+        const iconReservedWidth = hasStart ? iconSize + spacing : 0;
 
-        // Word wrap long text into lines
         const words = ft.text.split(' ');
-        let lines = [];
-        let currentLine = '';
+        let lines = [], currentLine = '';
 
         for (let i = 0; i < words.length; i++) {
             let testLine = currentLine ? currentLine + ' ' + words[i] : words[i];
@@ -825,7 +785,6 @@ function renderFloatingTexts() {
         }
         if (currentLine) lines.push(currentLine);
 
-        // Find widest line
         let maxTextWidth = 0;
         lines.forEach(l => {
             let w = ctx.measureText(l).width;
@@ -843,7 +802,6 @@ function renderFloatingTexts() {
         ctx.strokeStyle = 'rgba(255, 182, 215, 0.8)';
         ctx.lineWidth = 3;
         ctx.beginPath(); 
-        // Using a large radius (40px) matching the HUD main bar pill shape
         ctx.roundRect(boxX, boxY, boxWidth, boxHeight, 40);
         ctx.fill(); ctx.stroke();
 
@@ -855,7 +813,7 @@ function renderFloatingTexts() {
 
         lines.forEach((line, lineIdx) => {
             let lineWidth = ctx.measureText(line).width;
-            let totalLineWidth = lineWidth + (lineIdx === 0 && hasStart ? iconSize + spacing : 0) + (lineIdx === lines.length - 1 && hasEnd ? iconSize + spacing : 0);
+            let totalLineWidth = lineWidth + (lineIdx === 0 && hasStart ? iconSize + spacing : 0);
             let drawX = boxX + (boxWidth - totalLineWidth) / 2;
             let currentLineY = startY + (lineIdx * lineHeight);
 
@@ -868,12 +826,6 @@ function renderFloatingTexts() {
             ctx.textBaseline = 'alphabetic';
             ctx.strokeText(line, drawX, currentLineY); 
             ctx.fillText(line, drawX, currentLineY);
-            drawX += lineWidth;
-
-            if (lineIdx === lines.length - 1 && hasEnd) {
-                drawX += spacing;
-                ctx.drawImage(ft.iconEnd, drawX, currentLineY - iconSize * 0.7, iconSize, iconSize);
-            }
         });
 
         ctx.restore();
@@ -892,11 +844,11 @@ function render() {
     });
 
     renderLanes();
-    entities.sort((a, b) => projection.project(b, {}).currentZ - projection.project(a, {}).currentZ);
+    entities.sort((a, b) => projection.project(b).currentZ - projection.project(a).currentZ);
 
     entities.forEach(ent => {
         if (ent.z < 0) return;
-        const p = projection.project(ent, {});
+        const p = projection.project(ent);
         const targetCtx = ent.type === 'cloud' ? cloudCtx : (ent.type === 'sparkle' ? sparkleCtx : ctx);
 
         let bw = (ent.type === 'rainbow') ? 1400 * p.scale : ent.size * p.scale;
@@ -956,9 +908,7 @@ function gameLoop(timestamp) {
     requestAnimationFrame(gameLoop);
 }
 
-const initialProj = projection.project({ x: 0, yRel: 0.5, z: 0.5 }, {});
-createObjectiveText(initialProj.x, canvas.height * 0.50);
-
+createObjectiveText();
 requestAnimationFrame(gameLoop);
 </script>
 </body>
