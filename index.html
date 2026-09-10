@@ -353,9 +353,8 @@ function resetEntity(ent) {
 
 function getPlayerBoundingBox() {
     const p = projection.getCubeParams();
-    const laneWidth = (p.size * 2) / 3;
     const origin = projection.project({ x: 0, yRel: 1.0, z: -5.0 });
-    const front = projection.project({ x: (-p.size + (player.lane * laneWidth) + laneWidth / 2) / p.size, yRel: 1.0, z: 1.0 });
+    const front = projection.project({ x: player.currentX, yRel: 1.0, z: 1.0 });
 
     const screenY = canvas.height * 0.78 - player.yOffset;
     const t = (screenY - origin.y) / (front.y - origin.y);
@@ -587,9 +586,8 @@ function renderLanes() {
 
 function renderPlayer() {
     const p = projection.getCubeParams();
-    const laneWidth = (p.size * 2) / 3;
     const origin = projection.project({ x: 0, yRel: 1.0, z: -5.0 });
-    const front = projection.project({ x: (-p.size + (player.lane * laneWidth) + laneWidth / 2) / p.size, yRel: 1.0, z: 1.0 });
+    const front = projection.project({ x: player.currentX, yRel: 1.0, z: 1.0 });
 
     const screenY = canvas.height * 0.78 - player.yOffset;
     const screenX = origin.x + (front.x - origin.x) * ((screenY - origin.y) / (front.y - origin.y));
