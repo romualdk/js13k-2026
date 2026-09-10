@@ -16,8 +16,8 @@ I wanted to focus on a small, manageable project that still delivers sharp visua
 
 * **3-Lane Movement:** Smoothly snap between **Left**, **Center**, and **Right** lanes to navigate the track.
 * **Jump Mechanic:** Leap over low obstacles and barriers using the up arrow, W key, or a swipe up.
-* **Dynamic Pacing:** Collect 100 stars to gain an extra life and trigger a slowdown effect to catch your breath[cite: 1].
-* **Speed Progression:** Pass through rainbow gates to boost your speed and ramp up the challenge[cite: 1].
+* **Dynamic Pacing:** Collect 100 stars to gain an extra life and trigger a slowdown effect to catch your breath.
+* **Speed Progression:** Pass through rainbow gates to boost your speed and ramp up the challenge.
 
 ## 🌟 Items & Obstacles
 
