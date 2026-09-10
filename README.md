@@ -30,9 +30,11 @@ I wanted to focus on a small, manageable project that still delivers sharp visua
 
 ## 📦 Builds
 
-* [2026-09-09 @ romualdk.github.io](https://romualdk.github.io/games/js13k-2026/0909/index.html)
-* [2026-09-08 @ romualdk.github.io](https://romualdk.github.io/games/js13k-2026/0908/index.html)
-* [2026-09-05 @ romualdk.github.io](https://romualdk.github.io/games/js13k-2026/0905/index.html)
-* [2026-08-20 @ romualdk.github.io](https://romualdk.github.io/games/js13k-2026/0820/index.html)
-* [2026-08-19 @ romualdk.github.io](https://romualdk.github.io/games/js13k-2026/0819/index.html)
-* [2026-08-15 @ romualdk.github.io](https://romualdk.github.io/games/js13k-2026/0815/index.html)
+* 📦 [js13k-2026-rainbow-runner-rkowalczyk](/js13k-2026-rainbow-runner-rkowalczyk.zip)
+* 🔗 [2026-09-10 @ romualdk.github.io minified (dist for js13k)](https://romualdk.github.io/games/js13k-2026/0910/index.html)
+* 🔗 [2026-09-09 @ romualdk.github.io](https://romualdk.github.io/games/js13k-2026/0909/index.html)
+* 🔗 [2026-09-08 @ romualdk.github.io](https://romualdk.github.io/games/js13k-2026/0908/index.html)
+* 🔗 [2026-09-05 @ romualdk.github.io](https://romualdk.github.io/games/js13k-2026/0905/index.html)
+* 🔗 [2026-08-20 @ romualdk.github.io](https://romualdk.github.io/games/js13k-2026/0820/index.html)
+* 🔗 [2026-08-19 @ romualdk.github.io](https://romualdk.github.io/games/js13k-2026/0819/index.html)
+* 🔗 [2026-08-15 @ romualdk.github.io](https://romualdk.github.io/games/js13k-2026/0815/index.html)
