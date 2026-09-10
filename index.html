@@ -56,6 +56,50 @@
         .hud-item { display: flex; align-items: center; gap: clamp(8px, 2vw, 16px); }
         .hud-icon { width: clamp(28px, 6vw, 48px); height: clamp(28px, 6vw, 48px); object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5)); margin: -4px 0; }
 
+        /* Floating Text DOM Container & Toast Styling */
+        #floatingContainer {
+            position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
+            pointer-events: none; z-index: 20; overflow: hidden;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            padding-top: 0;
+        }
+
+        .floating-toast {
+            position: absolute;
+            top: 35%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.94);
+            border: 3px solid rgba(255, 182, 215, 0.8);
+            border-radius: 40px;
+            padding: clamp(8px, 2vw, 12px) clamp(16px, 4vw, 28px);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-weight: 900;
+            font-size: clamp(15px, 4.5vw, 24px);
+            color: #ff006e;
+            text-shadow: none;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+            backdrop-filter: blur(8px);
+            display: flex; align-items: center; gap: clamp(8px, 2vw, 12px);
+            text-align: center;
+            max-width: min(90vw, 540px);
+            will-change: transform, opacity;
+            animation: floatUpFade 1.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+
+        .floating-toast img {
+            width: clamp(22px, 5.5vw, 32px);
+            height: clamp(22px, 5.5vw, 32px);
+            object-fit: contain;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+        }
+
+        @keyframes floatUpFade {
+            0% { opacity: 0; transform: translateY(-50%) scale(0.85); }
+            15% { opacity: 1; transform: translateY(-50%) scale(1); }
+            75% { opacity: 1; transform: translateY(calc(-50% - 60px)) scale(1); }
+            100% { opacity: 0; transform: translateY(calc(-50% - 120px)) scale(0.92); }
+        }
+
         #fpsCounter {
             position: absolute; bottom: 10px; left: 10px;
             background: rgba(0, 0, 0, 0.7); color: #00ffcc;
@@ -108,6 +152,8 @@
     <div id="hudBestBadge"><img src="assets/trophy.svg" class="hud-best-icon" alt="Best"> BEST: <span id="hudBest">0</span>m</div>
 </div>
 
+<div id="floatingContainer"></div>
+
 <div id="gameOverScreen">
     <h1 id="gameOverTitle"></h1>
     <div id="newRecordBanner"></div>
@@ -144,6 +190,7 @@ const hudStarsElem = document.getElementById('hudStars');
 const hudDistElem = document.getElementById('hudDist');
 const hudLivesElem = document.getElementById('hudLives');
 const hudBestElem = document.getElementById('hudBest');
+const floatingContainer = document.getElementById('floatingContainer');
 const gameOverScreen = document.getElementById('gameOverScreen');
 const gameOverTitle = document.getElementById('gameOverTitle');
 const statDist = document.getElementById('statDist');
@@ -188,7 +235,7 @@ let pendingMessages = [], messageQueueTimer = 0, spawnTimer = 0, rainbowTimer = 
 let debugMode = false, frameCount = 0, currentFps = 60, lastFpsCheck = performance.now();
 
 const player = { lane: 1, currentX: 0, size: 220, facing: 'right', yOffset: 0, yVelocity: 0 };
-const entities = [], particles = [], floatingTexts = [];
+const entities = [], particles = [];
 
 const updateHUDRecord = () => hudBestElem.textContent = Math.max(topDistanceRecord, Math.floor(gameDistance));
 updateHUDRecord();
@@ -225,15 +272,28 @@ window.addEventListener('touchend', (e) => {
 
 window.addEventListener('click', () => isGameOver && restartGame());
 
-function createFloatingText(text, icon = null) {
-    const p = projection.project({ x: 0, yRel: 0.5, z: 0.5 });
-    floatingTexts.push({ text, icon, x: p.x, y: canvas.height * 0.35, alpha: 1.0, life: 1.0 });
+function createFloatingText(text, iconAsset = null) {
+    const toast = document.createElement('div');
+    toast.className = 'floating-toast';
+    
+    if (iconAsset && iconAsset.src) {
+        const img = document.createElement('img');
+        img.src = iconAsset.src;
+        img.alt = "";
+        toast.appendChild(img);
+    }
+    
+    const textNode = document.createElement('span');
+    textNode.textContent = text;
+    toast.appendChild(textNode);
+
+    floatingContainer.appendChild(toast);
+    toast.addEventListener('animationend', () => toast.remove());
 }
 
 function createObjectiveText() {
     const text = objectiveMessages[Math.floor(Math.random() * objectiveMessages.length)];
-    const p = projection.project({ x: 0, yRel: 0.5, z: 0.5 });
-    floatingTexts.push({ text, icon: null, x: p.x, y: canvas.height * 0.50, alpha: 1.0, life: 1.5 });
+    createFloatingText(text);
 }
 
 function createStarBurst(x, y, count = 14, speedMult = 1, imgAsset = ASSETS.star) {
@@ -343,7 +403,8 @@ function restartGame() {
     topDistanceRecord = parseInt(localStorage.getItem('rainbowRunner_topDist') || '0', 10);
     gameTime = gameDistance = collectedStars = lastLifeMilestone = spawnTimer = rainbowTimer = messageQueueTimer = 0;
     globalSpeedMultiplier = 1.0; lives = 3; isGameOver = false;
-    pendingMessages.length = entities.length = particles.length = floatingTexts.length = 0;
+    pendingMessages.length = entities.length = particles.length = 0;
+    floatingContainer.innerHTML = '';
 
     spawnBackgroundEntities();
     updateHUDRecord();
@@ -477,13 +538,6 @@ function update(dt) {
         if (p.life <= 0) particles.splice(i, 1);
     }
 
-    for (let i = floatingTexts.length - 1; i >= 0; i--) {
-        const ft = floatingTexts[i];
-        ft.y -= 90 * dt; ft.life -= dt;
-        ft.alpha = Math.max(0, ft.life);
-        if (ft.life <= 0) floatingTexts.splice(i, 1);
-    }
-
     hudStarsElem.textContent = collectedStars;
     hudDistElem.textContent = Math.floor(gameDistance);
     hudLivesElem.textContent = lives;
@@ -555,81 +609,6 @@ function renderParticles() {
     });
 }
 
-function renderFloatingTexts() {
-    if (!floatingTexts.length) return;
-    ctx.save();
-    
-    const dynamicFontSize = Math.max(14, Math.min(26, window.innerWidth * 0.045));
-    ctx.font = `900 ${dynamicFontSize}px "Segoe UI", Tahoma, Geneva, Verdana, sans-serif`;
-
-    const maxAllowedWidth = window.innerWidth - 32;
-
-    floatingTexts.forEach(ft => {
-        ctx.save();
-        ctx.globalAlpha = ft.alpha;
-
-        const iconSize = dynamicFontSize * 0.95;
-        const spacing = dynamicFontSize * 0.3;
-        const padX = dynamicFontSize * 1.2, padY = dynamicFontSize * 0.65;
-
-        const hasIcon = ft.icon && ft.icon.complete && ft.icon.naturalWidth;
-        const iconReservedWidth = hasIcon ? iconSize + spacing : 0;
-
-        const words = ft.text.split(' ');
-        let lines = [], currentLine = '';
-
-        for (let i = 0; i < words.length; i++) {
-            let testLine = currentLine ? currentLine + ' ' + words[i] : words[i];
-            if (ctx.measureText(testLine).width + iconReservedWidth > maxAllowedWidth && currentLine) {
-                lines.push(currentLine);
-                currentLine = words[i];
-            } else currentLine = testLine;
-        }
-        if (currentLine) lines.push(currentLine);
-
-        const maxTextWidth = Math.max(...lines.map(l => ctx.measureText(l).width));
-        const boxWidth = Math.min(maxAllowedWidth, maxTextWidth + iconReservedWidth + padX);
-        const lineHeight = dynamicFontSize * 1.25;
-        const boxHeight = (lines.length * lineHeight) + (padY * 2);
-        
-        const boxX = Math.max(16, Math.min(ft.x - boxWidth / 2, window.innerWidth - boxWidth - 16));
-        const boxY = ft.y - boxHeight / 2;
-
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.94)';
-        ctx.strokeStyle = 'rgba(255, 182, 215, 0.8)';
-        ctx.lineWidth = 3;
-        ctx.beginPath(); 
-        ctx.roundRect(boxX, boxY, boxWidth, boxHeight, 40);
-        ctx.fill(); ctx.stroke();
-
-        ctx.shadowColor = 'rgba(255, 255, 255, 0.9)'; ctx.shadowBlur = 10;
-        ctx.fillStyle = '#ff006e'; ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 3; ctx.lineJoin = 'round';
-
-        const startY = boxY + padY + (dynamicFontSize * 0.8);
-
-        lines.forEach((line, lineIdx) => {
-            const lineWidth = ctx.measureText(line).width;
-            const totalLineWidth = lineWidth + (lineIdx === 0 && hasIcon ? iconSize + spacing : 0);
-            let drawX = boxX + (boxWidth - totalLineWidth) / 2;
-            const currentLineY = startY + (lineIdx * lineHeight);
-
-            if (lineIdx === 0 && hasIcon) {
-                ctx.drawImage(ft.icon, drawX, currentLineY - iconSize * 0.7, iconSize, iconSize);
-                drawX += iconSize + spacing;
-            }
-
-            ctx.textAlign = 'left'; 
-            ctx.textBaseline = 'alphabetic';
-            ctx.strokeText(line, drawX, currentLineY); 
-            ctx.fillText(line, drawX, currentLineY);
-        });
-
-        ctx.restore();
-    });
-    ctx.restore();
-}
-
 function render() {
     [cloudCtx, ctx, sparkleCtx].forEach((c, i) => {
         c.clearRect(0, 0, [cloudCanvas, canvas, sparkleCanvas][i].width, [cloudCanvas, canvas, sparkleCanvas][i].height);
@@ -664,7 +643,8 @@ function render() {
         targetCtx.restore();
     });
 
-    renderPlayer(); renderParticles(); renderFloatingTexts();
+    renderPlayer(); 
+    renderParticles();
 
     if (debugMode) fpsElem.textContent = `FPS: ${currentFps} | Entities: ${entities.length}`;
 
