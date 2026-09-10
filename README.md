@@ -1,38 +1,38 @@
-Entry for https://js13kgames.com/2026/  Unicorns and Rainbows 🦄🌈
-
 # 🌈 Rainbow Runner
 
 Quick-reaction 3-lane action!
 
-Dodge hazards, snatch stars, and trigger powerful boosts—all with simple **Left** and **Right** controls.
+Dodge hazards, snatch stars, and stay alive on the rainbow road — all with simple **Left**, **Right**, and **Jump** controls.
 
-![gameplay](design/Gemini_Generated_Image_z1r7afz1r7afz1r7.png)
+![gameplay](screenshots/screenshot%202026-09-10_3.png)
+
+## 💡 Why I Made This
+
+I built this game for the [js13kGames 2026](https://js13kgames.com/2026) "Unicorns and Rainbows" theme.
+
+I wanted to focus on a small, manageable project that still delivers sharp visuals and fun, fast-paced arcade gameplay.
 
 ## ⚡ Core Gameplay
 
 * **3-Lane Movement:** Smoothly snap between **Left**, **Center**, and **Right** lanes to navigate the track.
-* **Dynamic Speed:** The track continuously speeds up over time, ramping up the challenge.
-* **Fever Multiplier:** Collect stars without missing to fill your streak meter and unlock $2\times$ and $3\times$ score multipliers.
+* **Jump Mechanic:** Leap over low obstacles and barriers using the up arrow, W key, or a swipe up.
+* **Dynamic Pacing:** Collect 100 stars to gain an extra life and trigger a slowdown effect to catch your breath[cite: 1].
+* **Speed Progression:** Pass through rainbow gates to boost your speed and ramp up the challenge[cite: 1].
 
-## 🌟 The 3 Power-Ups
+## 🌟 Items & Obstacles
 
-| Power-Up | Effect |
-| :--- | :--- |
-| 🧲 **Star Magnet** | Pulls all stars from nearby lanes directly toward you for **5 seconds**. |
-| ⚡ **Rainbow Rush** | Boosts speed, makes you **invincible**, and turns all incoming hazards into stars for **3 seconds**. |
-| 🛡️ **Cloud Shield** | Grants a **1-hit safety net** that absorbs your next crash against any obstacle. |
+| Element | Type | Effect / Tactical Role |
+| :--- | :--- | :--- |
+| ⭐ **Star** | Collectible | Snatch stars along the lanes to increase your score and trigger celebrations. Every 100 stars grants an extra life and slows down time. |
+| 🚧 **Red Gate** | Hazard | A barrier blocking a specific lane. Dodge to another lane or face a crash penalty. |
+| 🚧 **Green Gate** | Hazard | A wide barrier spanning across the course that requires a well-timed jump to clear. |
+| 🌈 **Rainbow Arch** | Bonus | Speeds up your run when passed. |
 
+## 📦 Builds
 
-## 🌩️ The 3 Hazards
-
-| Hazard | Effect / Tactical Role |
-| :--- | :--- |
-| 🌈 **Color Gate** | A glowing arch across the lane. Passable only if your active color matches the gate—otherwise, dodge! |
-| 🌩️ **Storm Cloud** | Blocks a **single lane**. Perform a quick reactive dodge into either open lane. |
-| 🚧 **Dual Barrier** | Blocks **two lanes at once**. Tests your precision under tight pressure to find the single opening. |
-
-# Builds
-
-## 2026-08-15
-
-https://romualdk.github.io/games/js13k-2026/0815/index.html
+* [2026-09-09 @ romualdk.github.io](https://romualdk.github.io/games/js13k-2026/0909/index.html)
+* [2026-09-08 @ romualdk.github.io](https://romualdk.github.io/games/js13k-2026/0908/index.html)
+* [2026-09-05 @ romualdk.github.io](https://romualdk.github.io/games/js13k-2026/0905/index.html)
+* [2026-08-20 @ romualdk.github.io](https://romualdk.github.io/games/js13k-2026/0820/index.html)
+* [2026-08-19 @ romualdk.github.io](https://romualdk.github.io/games/js13k-2026/0819/index.html)
+* [2026-08-15 @ romualdk.github.io](https://romualdk.github.io/games/js13k-2026/0815/index.html)
